@@ -4,6 +4,7 @@ import type Konva from "konva";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { EditorStage } from "./canvas/EditorStage";
+import { exportStageToPng, saveImage } from "./export/exportPng";
 import { useCanvasGestures } from "./gestures/useCanvasGestures";
 import { imageFromPasteEvent } from "./media/clipboard";
 import { ensureFontsLoaded } from "./media/fonts";
@@ -82,6 +83,31 @@ export function EditorScreen({
     ui.closeSheet();
   }
 
+  async function handleExport() {
+    const stage = stageRef.current;
+    if (!stage) return;
+    ui.select(null);
+    ui.setExporting(true);
+    try {
+      await ensureFontsLoaded(snapshot.blocks);
+      // 오버레이(가이드·핸들)가 숨겨진 상태로 다시 그려질 때까지 한 프레임 기다린다.
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      const blob = await exportStageToPng(stage, canvas.width);
+      const result = await saveImage(blob, `merry-${Date.now()}.png`);
+      if (result === "downloaded") toast.success("이미지를 저장했어요");
+    } catch {
+      toast.error("이미지를 만들지 못했어요");
+    } finally {
+      ui.setExporting(false);
+    }
+  }
+
+  function handleNew() {
+    if (!window.confirm("지금 작업이 모두 지워져요. 새로 만들까요?")) return;
+    ui.select(null);
+    handle.reset();
+  }
+
   // PC: Ctrl/Cmd+V로 이미지 붙여넣기
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
@@ -134,13 +160,13 @@ export function EditorScreen({
         canUndo={canUndo}
         canRedo={canRedo}
         exporting={ui.exporting}
-        onClose={() => {}}
+        onClose={handleNew}
         onUndo={() => history.undo()}
         onRedo={() => history.redo()}
         onBackground={() => ui.openSheet("background")}
         onText={() => ui.openComposer(null)}
         onSticker={() => ui.openSheet("sticker")}
-        onExport={() => {}}
+        onExport={() => void handleExport()}
       />
       <div
         ref={areaRef}
