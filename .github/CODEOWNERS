@@ -1,0 +1,5 @@
+# private repo가 GitHub Free 플랜이면 CODEOWNERS 자동 리뷰어 지정이 지원되지 않아서
+# .github/workflows/pr-auto-assign.yaml이 이 파일의 개인 계정을 읽어 리뷰어로 요청한다.
+# (PR 작성자 본인은 자동으로 제외된다.) 팀 멤버가 바뀌면 이 파일도 같이 고친다.
+# TODO: BE 담당자 GitHub 계정 추가
+* @AhnRian
