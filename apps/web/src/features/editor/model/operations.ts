@@ -1,11 +1,12 @@
 import * as Y from "yjs";
 import { getBlocks, getMeta, getOrder, LOCAL_ORIGIN } from "./doc";
+import { createId } from "./id";
 import type { Background, Block, Size, StickerBlock, TextBlock, TextDraft } from "./types";
 
 export type BlockPatch = Partial<Omit<TextBlock, "id" | "type">> &
   Partial<Omit<StickerBlock, "id" | "type">>;
 
-const newId = () => crypto.randomUUID();
+const newId = () => createId();
 
 function insertBlock(doc: Y.Doc, block: Block): void {
   doc.transact(() => {
