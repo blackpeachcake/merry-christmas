@@ -3,6 +3,7 @@
 import type Konva from "konva";
 import { useEffect, useRef, useState } from "react";
 import { EditorStage } from "./canvas/EditorStage";
+import { useCanvasGestures } from "./gestures/useCanvasGestures";
 import { ensureFontsLoaded } from "./media/fonts";
 import { CANVAS_SIZE } from "./model/constants";
 import { fitScale } from "./model/geometry";
@@ -13,6 +14,7 @@ import type { EditorDocHandle } from "./state/useEditorDoc";
 import { useElementSize } from "./state/useElementSize";
 import { useHistoryState } from "./state/useHistoryState";
 import { TopBar } from "./ui/TopBar";
+import { TrashZone } from "./ui/TrashZone";
 
 export function EditorScreen({
   handle,
@@ -30,6 +32,40 @@ export function EditorScreen({
 
   const canvas = CANVAS_SIZE[snapshot.ratio];
   const viewScale = area.width > 0 ? fitScale(canvas, area) : 0;
+
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const trashRef = useRef<HTMLDivElement | null>(null);
+  const finePointer = typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches;
+
+  function handleTapBlock(id: string) {
+    const block = snapshot.blocks.find((b) => b.id === id);
+    if (!block) return;
+    if (finePointer && ui.selectedId !== id) {
+      ui.select(id);
+      return;
+    }
+    if (block.type === "text") ui.openComposer(id);
+  }
+
+  function handleTapEmpty() {
+    if (finePointer && ui.selectedId) {
+      ui.select(null);
+      return;
+    }
+    ui.openComposer(null);
+  }
+
+  useCanvasGestures({
+    targetRef: canvasRef,
+    stageRef,
+    doc,
+    canvas,
+    viewScale,
+    trashRef,
+    enabled: ui.composer === null && ui.sheet === null && viewScale > 0,
+    onTapBlock: handleTapBlock,
+    onTapEmpty: handleTapEmpty,
+  });
 
   // 폰트 조각이 새로 로드되면 글자 폭을 다시 잰다.
   useEffect(() => {
@@ -70,6 +106,7 @@ export function EditorScreen({
       >
         {viewScale > 0 && (
           <div
+            ref={canvasRef}
             data-testid="editor-canvas"
             data-block-count={snapshot.blocks.length}
             className="touch-none select-none"
@@ -93,6 +130,7 @@ export function EditorScreen({
             />
           </div>
         )}
+        <TrashZone ref={trashRef} visible={ui.dragging} active={ui.overTrash} />
       </div>
     </div>
   );
