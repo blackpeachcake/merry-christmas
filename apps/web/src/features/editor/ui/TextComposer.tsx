@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { FONTS } from "../media/fonts";
 import { COLOR_PALETTE, FONT_IDS, FONT_SIZE_RANGE } from "../model/constants";
@@ -44,7 +44,26 @@ export function TextComposer({
   const [draft, setDraft] = useState<TextDraft>(initial);
   const viewportHeight = useVisualViewportHeight();
   const style = textStyle(draft.color, draft.textBg);
-  const set = (patch: Partial<TextDraft>) => setDraft((d) => ({ ...d, ...patch }));
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // 커서는 항상 입력 칸에 둔다. 포커스가 버튼으로 옮겨가면 휴대폰은 키보드가 내려가고,
+  // macOS 이모지 선택 창 등에서 넣은 문자가 들어갈 곳이 없어진다.
+  const refocus = () => textareaRef.current?.focus();
+  const set = (patch: Partial<TextDraft>) => {
+    setDraft((d) => ({ ...d, ...patch }));
+    refocus();
+  };
+  // 버튼·빈 영역을 누르는 순간 포커스를 빼앗지 않게 한다(슬라이더와 입력 칸은 제외).
+  const keepFocus = (event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (
+      target === textareaRef.current ||
+      (target instanceof HTMLInputElement && target.type === "range")
+    ) {
+      return;
+    }
+    event.preventDefault();
+  };
 
   return (
     <div
@@ -52,6 +71,7 @@ export function TextComposer({
       aria-label="텍스트 편집"
       className="fixed inset-x-0 top-0 z-50 flex flex-col bg-black/70 backdrop-blur-sm"
       style={{ height: viewportHeight ?? "100dvh" }}
+      onMouseDown={keepFocus}
     >
       <div className="flex items-center justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="flex gap-2">
@@ -88,16 +108,18 @@ export function TextComposer({
           min={FONT_SIZE_RANGE.min}
           max={FONT_SIZE_RANGE.max}
           value={draft.fontSize}
-          onChange={(e) => set({ fontSize: Number(e.target.value) })}
+          onChange={(e) => setDraft((d) => ({ ...d, fontSize: Number(e.target.value) }))}
+          onPointerUp={refocus}
           className="h-48 w-6 [direction:rtl] [writing-mode:vertical-lr]"
         />
         <div className="flex flex-1 justify-center">
           <textarea
+            ref={textareaRef}
             aria-label="텍스트 입력"
             autoFocus
             rows={3}
             value={draft.text}
-            onChange={(e) => set({ text: e.target.value })}
+            onChange={(e) => setDraft((d) => ({ ...d, text: e.target.value }))}
             className="w-full resize-none rounded-lg bg-transparent p-2 outline-none"
             style={{
               fontFamily: FONTS[draft.fontId].family,

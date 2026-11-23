@@ -51,4 +51,30 @@ describe("TextComposer", () => {
     fireEvent.click(screen.getByRole("button", { name: "완료" }));
     expect(onDone).toHaveBeenCalledWith(expect.objectContaining({ fontSize: 150 }));
   });
+
+  // 포커스가 입력 칸을 떠나면 macOS 이모지 선택 창 등에서 넣은 문자가 들어갈 곳이 없다.
+  it("스타일 버튼·슬라이더를 써도 커서가 입력 칸에 남는다", () => {
+    render(<TextComposer initial={DEFAULT_TEXT_DRAFT} onDone={vi.fn()} />);
+    const textbox = screen.getByRole("textbox", { name: "텍스트 입력" });
+
+    for (const name of ["손글씨", "색 #E53935", "정렬: 가운데", "글자 배경: 없음"]) {
+      const button = screen.getByRole("button", { name });
+      button.focus();
+      fireEvent.click(button);
+      expect(document.activeElement).toBe(textbox);
+    }
+
+    const slider = screen.getByRole("slider", { name: "글자 크기" });
+    slider.focus();
+    fireEvent.change(slider, { target: { value: "120" } });
+    fireEvent.pointerUp(slider);
+    expect(document.activeElement).toBe(textbox);
+  });
+
+  it("버튼을 누르는 순간(mousedown) 포커스를 빼앗지 않는다", () => {
+    render(<TextComposer initial={DEFAULT_TEXT_DRAFT} onDone={vi.fn()} />);
+    const event = fireEvent.mouseDown(screen.getByRole("button", { name: "손글씨" }));
+    // fireEvent는 기본 동작이 막혔으면 false를 돌려준다
+    expect(event).toBe(false);
+  });
 });
