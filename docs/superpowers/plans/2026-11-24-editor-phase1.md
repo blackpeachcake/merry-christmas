@@ -1368,7 +1368,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `readClipboardImage(clipboard?: Pick<Clipboard, "read">): Promise<ClipboardImageResult>`
   - `imageFromPasteEvent(event: Pick<ClipboardEvent, "clipboardData">): File | null`
 
-> **한글 웹폰트 주의:** Google 한글 폰트는 글자 범위별로 수십 개 파일로 쪼개져 있다. `<canvas>`는 아직 안 받은 조각을 자동으로 기다리지 않고 기본 폰트로 그린다. 그래서 그리기·저장 전에 `document.fonts.load(font, 실제 글자)`로 필요한 조각을 받는다(`ensureFontsLoaded`). `preload`는 latin 조각만 미리 받는다.
+> **한글 웹폰트 주의:** Google 한글 폰트는 글자 범위별로 수십 개 파일로 쪼개져 있다. `<canvas>`는 아직 안 받은 조각을 자동으로 기다리지 않고 기본 폰트로 그린다. 그래서 그리기·저장 전에 `document.fonts.load(font, 실제 글자)`로 필요한 조각을 받는다(`ensureFontsLoaded`). `preload`는 latin 조각만 미리 받는다. 이 결정의 이유는 `docs/decisions/0001-korean-font-loading.md`.
 
 - [ ] **Step 1: Pretendard 파일 복사**
 
@@ -1386,6 +1386,7 @@ import { Black_Han_Sans, Gowun_Batang, Jua, Nanum_Pen_Script } from "next/font/g
 import localFont from "next/font/local";
 import type { Block, FontId } from "../model/types";
 
+// 한글은 preload하지 않고 쓰는 글자만 그때 받는다 — docs/decisions/0001-korean-font-loading.md
 const pretendard = localFont({
   src: "./PretendardVariable.woff2",
   weight: "45 920",
@@ -3693,16 +3694,17 @@ Expected: PASS (smoke 2 + editor 4 = 6 tests, WebKit 다운로드 부분은 skip
 
 ✅ 됨 · ⚠️ 부분적으로 됨(비고) · ❌ 안 됨
 
-| #   | 항목                                                | iPhone Safari | Android Chrome | 카톡 인앱 | 비고 |
-| --- | --------------------------------------------------- | ------------- | -------------- | --------- | ---- |
-| 1   | 요소 20개에서 드래그·핀치가 끊기지 않음             |               |                |           |      |
-| 2   | 핀치할 때 페이지 확대·스크롤이 일어나지 않음        |               |                |           |      |
-| 3   | 텍스트 입력 중 키보드가 올라와도 화면이 깨지지 않음 |               |                |           |      |
-| 4   | 폰트 5종이 캔버스와 저장 이미지에 처음부터 나옴     |               |                |           |      |
-| 5   | 누끼 붙여넣기 시 투명 배경 유지                     |               |                |           |      |
-| 6   | 원본 해상도 PNG 저장, 사진 앱에 저장됨              |               |                |           |      |
-| 7   | 제스처 하나가 실행 취소 한 단계                     |               |                |           |      |
-| 8   | 새로고침 후 작업 유지                               |               |                |           |      |
+| #   | 항목                                                                          | iPhone Safari | Android Chrome | 카톡 인앱 | 비고 |
+| --- | ----------------------------------------------------------------------------- | ------------- | -------------- | --------- | ---- |
+| 1   | 요소 20개에서 드래그·핀치가 끊기지 않음                                       |               |                |           |      |
+| 2   | 핀치할 때 페이지 확대·스크롤이 일어나지 않음                                  |               |                |           |      |
+| 3   | 텍스트 입력 중 키보드가 올라와도 화면이 깨지지 않음                           |               |                |           |      |
+| 4   | 폰트 5종이 캔버스와 저장 이미지에 처음부터 나옴                               |               |                |           |      |
+| 5   | 누끼 붙여넣기 시 투명 배경 유지                                               |               |                |           |      |
+| 6   | 원본 해상도 PNG 저장, 사진 앱에 저장됨                                        |               |                |           |      |
+| 7   | 제스처 하나가 실행 취소 한 단계                                               |               |                |           |      |
+| 8   | 새로고침 후 작업 유지                                                         |               |                |           |      |
+| 9   | 새 글자 첫 입력 때 폰트가 늦게 바뀌는 게 거슬리지 않음 (ADR 0001 재검토 기준) |               |                |           |      |
 
 ## 발견한 문제
 

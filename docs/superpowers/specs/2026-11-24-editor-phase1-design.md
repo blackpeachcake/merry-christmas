@@ -43,6 +43,8 @@
 | 토스트      | `sonner`                                                                                         | 에러·안내                                                                                                                                                                            |
 | 폰트        | Pretendard(로컬 woff2) + `next/font/google`(Gowun Batang, Jua, Black Han Sans, Nanum Pen Script) | 성격이 다른 무료(OFL) 5종. 디자인 단계에서 교체 가능                                                                                                                                 |
 
+**한글 폰트 로딩:** 영문만 preload하고 한글은 실제 쓰는 글자가 든 파일만 그때 받는다. 이유와 검토한 선택지는 `docs/decisions/0001-korean-font-loading.md`.
+
 ### Next.js와의 관계
 
 Konva·Yjs·IndexedDB는 브라우저 전용이다. 에디터는 `"use client"` 파일 안에서 `next/dynamic(..., { ssr: false })`로 불러와 **서버 렌더링에서 제외**한다(Next 16 문서: `ssr: false`는 클라이언트 컴포넌트에서만 허용).
@@ -247,6 +249,7 @@ iPhone Safari · Android Chrome · 카카오톡 인앱 브라우저에서 확인
 6. 원본 해상도 PNG에 폰트·이미지가 다 들어가고, iOS 사진 앱에 저장되는가
 7. 제스처 하나가 실행 취소 한 단계로 묶이는가
 8. 새로고침 후 작업이 유지되는가
+9. 새 글자를 처음 입력할 때 폰트가 늦게 바뀌는 것이 거슬리지 않는가 (`docs/decisions/0001-korean-font-loading.md` 재검토 기준)
 
 ## 9. 2단계로 넘길 것
 
