@@ -5,14 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import { EditorStage } from "./canvas/EditorStage";
 import { useCanvasGestures } from "./gestures/useCanvasGestures";
 import { ensureFontsLoaded } from "./media/fonts";
-import { CANVAS_SIZE } from "./model/constants";
+import { CANVAS_SIZE, DEFAULT_TEXT_DRAFT } from "./model/constants";
 import { fitScale } from "./model/geometry";
-import { updateBlock } from "./model/operations";
-import type { EditorSnapshot } from "./model/types";
+import { commitTextDraft, updateBlock } from "./model/operations";
+import type { EditorSnapshot, TextDraft } from "./model/types";
 import { useUiStore } from "./state/uiStore";
 import type { EditorDocHandle } from "./state/useEditorDoc";
 import { useElementSize } from "./state/useElementSize";
 import { useHistoryState } from "./state/useHistoryState";
+import { TextComposer } from "./ui/TextComposer";
 import { TopBar } from "./ui/TopBar";
 import { TrashZone } from "./ui/TrashZone";
 
@@ -53,6 +54,14 @@ export function EditorScreen({
       return;
     }
     ui.openComposer(null);
+  }
+
+  function composerInitial(): TextDraft {
+    const id = ui.composer?.blockId;
+    const block = id ? snapshot.blocks.find((b) => b.id === id) : undefined;
+    if (block?.type !== "text") return DEFAULT_TEXT_DRAFT;
+    const { text, fontId, fontSize, color, align, textBg } = block;
+    return { text, fontId, fontSize, color, align, textBg };
   }
 
   useCanvasGestures({
@@ -132,6 +141,16 @@ export function EditorScreen({
         )}
         <TrashZone ref={trashRef} visible={ui.dragging} active={ui.overTrash} />
       </div>
+      {ui.composer && (
+        <TextComposer
+          key={ui.composer.blockId ?? "new"}
+          initial={composerInitial()}
+          onDone={(draft) => {
+            commitTextDraft(doc, canvas, ui.composer?.blockId ?? null, draft);
+            ui.closeComposer();
+          }}
+        />
+      )}
     </div>
   );
 }
