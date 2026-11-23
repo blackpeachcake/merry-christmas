@@ -57,3 +57,5 @@ export const ROTATION_SNAP_DEG = 5;
 export const STICKER_INITIAL_RATIO = 0.5;
 export const MAX_IMAGE_EDGE = 2048;
 export const SCALE_BOUNDS = { min: 0.1, max: 10 } as const;
+/** 이 시간(ms) 이상 누르면 탭이 아니라 꾹 누르기(휴대폰 붙여넣기 메뉴)로 본다 */
+export const LONG_PRESS_MS = 450;

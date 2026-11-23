@@ -14,7 +14,7 @@ vi.mock("../media/clipboard", async (importOriginal) => ({
 vi.mock("sonner", () => ({ toast: { error: (m: string) => toastError(m) } }));
 
 const image = { src: "data:x", width: 10, height: 20 };
-const LONG_PRESS_HINT = "아래 칸을 길게 눌러 [붙여넣기]를 눌러 주세요";
+const LONG_PRESS_HINT = "캔버스를 꾹 눌러 [붙여넣기]를 눌러 주세요";
 
 beforeEach(() => vi.clearAllMocks());
 afterEach(() => vi.restoreAllMocks());
@@ -41,36 +41,21 @@ describe("StickerSheet", () => {
   });
 
   // http 접속·인앱 브라우저처럼 클립보드 API가 막힌 환경
-  it("[붙여넣기] 버튼: 클립보드 API가 막히면 앨범을 열지 않고 붙여넣기 칸을 안내한다", async () => {
+  it("[붙여넣기] 버튼: 클립보드 API가 막히면 앨범을 열지 않고 시트를 닫은 뒤 캔버스 꾹 누르기를 안내한다", async () => {
     readClipboardImage.mockResolvedValue({ ok: false, reason: "unsupported" });
     const openFilePicker = vi.spyOn(HTMLInputElement.prototype, "click");
-    render(<StickerSheet open onClose={vi.fn()} onPicked={vi.fn()} />);
+    const onClose = vi.fn();
+    render(<StickerSheet open onClose={onClose} onPicked={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "붙여넣기" }));
 
     await waitFor(() => expect(toastError).toHaveBeenCalledWith(LONG_PRESS_HINT));
+    expect(onClose).toHaveBeenCalled();
     expect(openFilePicker).not.toHaveBeenCalled();
   });
 
-  it("붙여넣기 칸: 휴대폰 기본 [붙여넣기]로 들어온 이미지로 onPicked를 부른다", async () => {
-    loadImageFile.mockResolvedValue(image);
-    const onPicked = vi.fn();
-    render(<StickerSheet open onClose={vi.fn()} onPicked={onPicked} />);
-
-    const file = new File(["png"], "cutout.png", { type: "image/png" });
-    fireEvent.paste(screen.getByRole("textbox", { name: "붙여넣기 칸" }), {
-      clipboardData: { items: [{ kind: "file", type: "image/png", getAsFile: () => file }] },
-    });
-
-    await waitFor(() => expect(onPicked).toHaveBeenCalledWith(image));
-    expect(loadImageFile).toHaveBeenCalledWith(file);
-  });
-
-  it("붙여넣기 칸: 이미지가 아닌 것을 붙여넣으면 안내한다", () => {
+  it("시트 안에는 별도 붙여넣기 칸이 없다(캔버스를 꾹 눌러 붙여넣는다)", () => {
     render(<StickerSheet open onClose={vi.fn()} onPicked={vi.fn()} />);
-    fireEvent.paste(screen.getByRole("textbox", { name: "붙여넣기 칸" }), {
-      clipboardData: { items: [{ kind: "string", type: "text/plain" }] },
-    });
-    expect(toastError).toHaveBeenCalledWith("복사된 이미지가 없어요");
+    expect(screen.queryByRole("textbox", { name: "붙여넣기 칸" })).not.toBeInTheDocument();
   });
 });

@@ -1,4 +1,10 @@
-import { ROTATION_SNAP_DEG, SCALE_BOUNDS, SNAP_DISTANCE, STICKER_INITIAL_RATIO } from "./constants";
+import {
+  LONG_PRESS_MS,
+  ROTATION_SNAP_DEG,
+  SCALE_BOUNDS,
+  SNAP_DISTANCE,
+  STICKER_INITIAL_RATIO,
+} from "./constants";
 import type { Point, Size } from "./types";
 
 export function fitScale(canvas: Size, viewport: Size): number {
@@ -61,4 +67,9 @@ export function coverRect(
 export function stickerInitialScale(image: Size, canvas: Size): number {
   const target = Math.min(canvas.width, canvas.height) * STICKER_INITIAL_RATIO;
   return target / Math.max(image.width, image.height);
+}
+
+/** 짧게 누른 것만 탭으로 본다. 꾹 누르기는 휴대폰 기본 붙여넣기 메뉴에 양보한다. */
+export function isQuickTap(elapsedMs: number): boolean {
+  return elapsedMs < LONG_PRESS_MS;
 }

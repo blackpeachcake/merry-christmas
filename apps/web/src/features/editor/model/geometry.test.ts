@@ -4,6 +4,7 @@ import {
   coverRect,
   fitScale,
   isInside,
+  isQuickTap,
   normalizeDeg,
   snapRotation,
   snapToCenter,
@@ -76,5 +77,13 @@ describe("geometry", () => {
 
   it("stickerInitialScale은 긴 변을 캔버스 짧은 변의 50%에 맞춘다", () => {
     expect(stickerInitialScale({ width: 1080, height: 540 }, canvas)).toBeCloseTo(0.5);
+  });
+
+  // 꾹 누른 뒤 떼는 것까지 탭으로 보면, 붙여넣기 메뉴를 텍스트 입력 화면이 가린다.
+  it("isQuickTap은 짧게 누른 것만 탭으로 본다", () => {
+    expect(isQuickTap(120)).toBe(true);
+    expect(isQuickTap(449)).toBe(true);
+    expect(isQuickTap(450)).toBe(false);
+    expect(isQuickTap(900)).toBe(false);
   });
 });

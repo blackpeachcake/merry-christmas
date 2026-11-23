@@ -4,7 +4,7 @@ import { useGesture } from "@use-gesture/react";
 import type Konva from "konva";
 import { type RefObject, useLayoutEffect, useRef } from "react";
 import type * as Y from "yjs";
-import { applyPinch, isInside, snapRotation, snapToCenter } from "../model/geometry";
+import { applyPinch, isInside, isQuickTap, snapRotation, snapToCenter } from "../model/geometry";
 import { removeBlock, updateBlock } from "../model/operations";
 import type { Size } from "../model/types";
 import { useUiStore } from "../state/uiStore";
@@ -99,11 +99,15 @@ export function useCanvasGestures(options: Options): void {
 
   useGesture(
     {
-      onDrag: ({ first, last, tap, initial, xy, movement, pinching }) => {
+      onDrag: ({ first, last, tap, initial, xy, movement, pinching, startTime, timeStamp }) => {
         if (!opts.current.enabled) return;
         const ui = useUiStore.getState();
 
-        if (tap && last) {
+        // 탭일 때는 first·last가 오지 않고 elapsedTime도 0이다(@use-gesture filterTaps).
+        // 누른 시간은 startTime~timeStamp로 잰다.
+        if (tap) {
+          // 꾹 누르기는 무시한다(휴대폰 기본 [붙여넣기] 메뉴가 떠 있어야 하므로).
+          if (!isQuickTap(timeStamp - startTime)) return;
           const hit = hitTest(xy[0], xy[1]);
           if (hit.kind === "block") opts.current.onTapBlock(hit.node.id());
           else if (hit.kind === "empty") opts.current.onTapEmpty();

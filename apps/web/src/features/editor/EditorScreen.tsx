@@ -19,6 +19,7 @@ import { useElementSize } from "./state/useElementSize";
 import { useHistoryState } from "./state/useHistoryState";
 import { BackgroundSheet } from "./ui/BackgroundSheet";
 import { StickerSheet } from "./ui/StickerSheet";
+import { CanvasPasteLayer } from "./ui/CanvasPasteLayer";
 import { TextComposer } from "./ui/TextComposer";
 import { TopBar } from "./ui/TopBar";
 import { TrashZone } from "./ui/TrashZone";
@@ -179,7 +180,7 @@ export function EditorScreen({
             ref={canvasRef}
             data-testid="editor-canvas"
             data-block-count={snapshot.blocks.length}
-            className="touch-none select-none"
+            className="relative touch-none select-none"
           >
             <EditorStage
               snapshot={snapshot}
@@ -198,6 +199,8 @@ export function EditorScreen({
                 )
               }
             />
+            {/* 터치 기기: 캔버스를 꾹 눌러 휴대폰 기본 [붙여넣기]. PC는 Cmd+V와 핸들을 쓴다. */}
+            {!finePointer && <CanvasPasteLayer />}
           </div>
         )}
         <TrashZone ref={trashRef} visible={ui.dragging} active={ui.overTrash} />
