@@ -12,34 +12,10 @@ jobs:
   assign:
     runs-on: ubuntu-latest
     steps:
+      # 리뷰어는 CODEOWNERS(@blackpeachcake/fe)로 GitHub이 자동 요청한다. 여기서는 담당자만 붙인다.
       - name: Assign PR author
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: gh pr edit "$PR_URL" --add-assignee "$PR_AUTHOR"
-
-      - name: Request CODEOWNERS review
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-        run: |
-          # private repo가 GitHub Free 플랜이면 CODEOWNERS 자동 리뷰어 지정이
-          # 지원 안 돼서(Team/Enterprise 플랜부터 지원) 대신 여기서 붙여준다.
-          # 체크아웃 없이 API로 base 브랜치의 CODEOWNERS만 가져온다.
-          # 팀(@org/team) 단위 리뷰어 요청도 Free 플랜에선 조용히 씹혀서(에러 없이 no-op),
-          # CODEOWNERS에 개인 계정을 직접 적어두고 그것만 리뷰어로 요청한다 - 팀 토큰이
-          # 섞여 있어도 gh pr edit이 에러 없이 무시하니 그대로 둬도 안전하다.
-          # ponytail: 패턴별 매칭 없이 CODEOWNERS에 적힌 owner 전체를 리뷰어로 요청함
-          # (지금은 한 줄뿐이라 충분 — 규칙이 여러 개로 늘어나면 path 매칭 추가)
-          # 참고: 이 Free 플랜 private repo는 한 번에 리뷰어 1명만 붙는 걸로 관찰됨 -
-          # 여러 명을 한 번에 요청해도 1명만 남고 나머지는 API 에러 없이 조용히 빠짐.
-          # ref 없이 호출하면 default 브랜치(main) 기준 파일이 오길래, PR head 커밋 기준으로 받는다.
-          OWNERS=$(gh api "repos/${{ github.repository }}/contents/.github/CODEOWNERS?ref=${{ github.event.pull_request.head.sha }}" -q '.content' | base64 -d \
-            | grep -v '^#' | grep -oE '@[^[:space:]]+' | sed 's/^@//' | sort -u | grep -vx "$PR_AUTHOR" | paste -sd, -)
-          if [ -z "$OWNERS" ]; then
-            echo "요청할 CODEOWNERS 없음, 건너뜀"
-            exit 0
-          fi
-          gh pr edit "$PR_URL" --add-reviewer "$OWNERS"
