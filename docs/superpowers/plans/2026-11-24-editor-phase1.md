@@ -3643,13 +3643,15 @@ test("비율 → 배경 → 텍스트 추가 → 새로고침 후 유지 → PNG
   await expect(page.getByTestId("editor-canvas")).toHaveAttribute("data-block-count", "1");
 
   // WebKit은 공유 시트를 열 수 있어 다운로드 검증은 Chromium에서만 한다.
-  test.skip(browserName !== "chromium", "다운로드 검증은 Chromium에서만");
-  const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "이미지 저장" }).click();
-  expect((await download).suggestedFilename()).toMatch(/^merry-\d+\.png$/);
+  // (test.skip을 쓰면 앞선 검증까지 skipped로 보고돼서 조건문으로 감싼다)
+  if (browserName === "chromium") {
+    const download = page.waitForEvent("download");
+    await page.getByRole("button", { name: "이미지 저장" }).click();
+    expect((await download).suggestedFilename()).toMatch(/^merry-\d+\.png$/);
+  }
 });
 
-test("실행 취소로 삭제한 텍스트를 되살린다", async ({ page }) => {
+test("실행 취소·다시 실행으로 텍스트 추가를 되돌리고 되살린다", async ({ page }) => {
   await page.goto("/editor");
   await page.getByRole("button", { name: "1:1 정사각형" }).click();
   await page.getByRole("button", { name: "시작하기" }).click();
@@ -3671,7 +3673,7 @@ test("실행 취소로 삭제한 텍스트를 되살린다", async ({ page }) =>
 - [ ] **Step 2: E2E 실행**
 
 Run: `pnpm --filter web exec playwright install chromium webkit && pnpm --filter web test:e2e`
-Expected: PASS (smoke 2 + editor 4 = 6 tests, WebKit 다운로드 부분은 skip). 실패 시 `apps/web/playwright-report`에서 원인 확인 후 수정.
+Expected: PASS (smoke 2 + editor 4 = 6 tests. WebKit에서는 다운로드 검증만 건너뜀). 실패 시 `apps/web/playwright-report`에서 원인 확인 후 수정.
 
 - [ ] **Step 3: 실험 결과 문서 틀 작성** — `docs/experiments/editor-phase1.md`
 
