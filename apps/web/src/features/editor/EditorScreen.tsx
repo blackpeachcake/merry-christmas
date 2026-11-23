@@ -111,7 +111,9 @@ export function EditorScreen({
   // PC: Ctrl/Cmd+V로 이미지 붙여넣기
   useEffect(() => {
     const onPaste = (event: ClipboardEvent) => {
-      if (useUiStore.getState().composer) return;
+      // 입력 화면·시트(스티커 시트의 붙여넣기 칸)가 열려 있거나 이미 처리된 붙여넣기는 무시한다.
+      const { composer, sheet } = useUiStore.getState();
+      if (composer || sheet || event.defaultPrevented) return;
       const file = imageFromPasteEvent(event);
       if (!file) return;
       event.preventDefault();
