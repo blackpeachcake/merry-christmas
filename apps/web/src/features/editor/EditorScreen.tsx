@@ -2,17 +2,22 @@
 
 import type Konva from "konva";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { EditorStage } from "./canvas/EditorStage";
 import { useCanvasGestures } from "./gestures/useCanvasGestures";
+import { imageFromPasteEvent } from "./media/clipboard";
 import { ensureFontsLoaded } from "./media/fonts";
+import { type LoadedImage, loadImageFile } from "./media/loadImage";
 import { CANVAS_SIZE, DEFAULT_TEXT_DRAFT } from "./model/constants";
-import { fitScale } from "./model/geometry";
-import { commitTextDraft, updateBlock } from "./model/operations";
+import { fitScale, stickerInitialScale } from "./model/geometry";
+import { addSticker, commitTextDraft, setBackground, updateBlock } from "./model/operations";
 import type { EditorSnapshot, TextDraft } from "./model/types";
 import { useUiStore } from "./state/uiStore";
 import type { EditorDocHandle } from "./state/useEditorDoc";
 import { useElementSize } from "./state/useElementSize";
 import { useHistoryState } from "./state/useHistoryState";
+import { BackgroundSheet } from "./ui/BackgroundSheet";
+import { StickerSheet } from "./ui/StickerSheet";
 import { TextComposer } from "./ui/TextComposer";
 import { TopBar } from "./ui/TopBar";
 import { TrashZone } from "./ui/TrashZone";
@@ -63,6 +68,34 @@ export function EditorScreen({
     const { text, fontId, fontSize, color, align, textBg } = block;
     return { text, fontId, fontSize, color, align, textBg };
   }
+
+  function addStickerFromImage(image: LoadedImage) {
+    addSticker(doc, {
+      src: image.src,
+      width: image.width,
+      height: image.height,
+      x: canvas.width / 2,
+      y: canvas.height / 2,
+      rotation: 0,
+      scale: stickerInitialScale(image, canvas),
+    });
+    ui.closeSheet();
+  }
+
+  // PC: Ctrl/Cmd+V로 이미지 붙여넣기
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent) => {
+      if (useUiStore.getState().composer) return;
+      const file = imageFromPasteEvent(event);
+      if (!file) return;
+      event.preventDefault();
+      loadImageFile(file)
+        .then(addStickerFromImage)
+        .catch(() => toast.error("이미지를 불러오지 못했어요"));
+    };
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  });
 
   useCanvasGestures({
     targetRef: canvasRef,
@@ -151,6 +184,17 @@ export function EditorScreen({
           }}
         />
       )}
+      <StickerSheet
+        open={ui.sheet === "sticker"}
+        onClose={ui.closeSheet}
+        onPicked={addStickerFromImage}
+      />
+      <BackgroundSheet
+        open={ui.sheet === "background"}
+        value={snapshot.background}
+        onClose={ui.closeSheet}
+        onChange={(background) => setBackground(doc, background)}
+      />
     </div>
   );
 }
