@@ -1,18 +1,18 @@
 // FE/BE 공유 도메인 타입 — 단일 출처.
 // BE 설계(Discussion #6) 데이터 모델과 1:1 대응.
 
-export type BlockType = 'text' | 'image' | 'sticker';
-export type InvitationStatus = 'draft' | 'published';
-export type MemberRole = 'owner' | 'editor';
-export type RsvpStatus = 'yes' | 'no' | 'maybe';
+export type BlockType = "text" | "image" | "sticker";
+export type InvitationStatus = "draft" | "published";
+export type MemberRole = "owner" | "editor";
+export type RsvpStatus = "yes" | "no" | "maybe";
 
 export interface InvitationBlock {
   id: string;
   invitationId: string;
   type: BlockType;
   textContent?: string; // type === 'text'
-  imageUrl?: string;    // type === 'image' | 'sticker'
-  posOrder: number;     // 인스타식 순서
+  imageUrl?: string; // type === 'image' | 'sticker'
+  posOrder: number; // 인스타식 순서
   updatedBy: string;
   updatedAt: string;
 }

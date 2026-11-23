@@ -1,0 +1,29 @@
+# Git 훅. `pnpm install` 시 lefthook이 자동으로 설치(sync)한다.
+# 급할 때 건너뛰기: LEFTHOOK=0 git commit ...
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: prettier
+      glob: "*.{js,mjs,cjs,ts,mts,tsx,json,css,md,yml,yaml}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+
+    - name: eslint (web)
+      root: "apps/web/"
+      glob: "*.{js,mjs,ts,mts,tsx}"
+      run: pnpm exec eslint --fix --no-warn-ignored {staged_files}
+      stage_fixed: true
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: typecheck
+      run: pnpm typecheck
+    - name: unit test
+      run: pnpm test
