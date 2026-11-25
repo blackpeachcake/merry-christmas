@@ -1,25 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-
-export interface TokenConfig {
-  accessSecret: string;
-  refreshSecret: string;
-  pendingSecret: string;
-  accessTtl: string; // 예: '15m'
-  refreshTtl: string; // 예: '14d'
-  pendingTtl: string; // 예: '10m'
-}
-
-export interface KakaoProfile {
-  provider: 'kakao';
-  providerUserId: string;
-  nickname: string;
-  imageUrl?: string;
-}
-
-export interface SubPayload {
-  sub: string;
-}
+import { KakaoProfile, SubPayload, TokenConfig } from '../models/auth.model';
 
 // access(15m)/refresh(14d)/pending(10m) 발급·검증. 타입별 secret 분리.
 @Injectable()
