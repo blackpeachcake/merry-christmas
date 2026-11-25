@@ -1,5 +1,5 @@
 {
-  "name": "@merry/shared",
+  "name": "@nacho/shared",
   "version": "0.0.0",
   "private": true,
   "main": "src/index.ts",

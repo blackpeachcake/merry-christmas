@@ -3,11 +3,11 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: merry
-      POSTGRES_PASSWORD: merry
-      POSTGRES_DB: merry_dev
+      POSTGRES_USER: nacho
+      POSTGRES_PASSWORD: nacho
+      POSTGRES_DB: nacho_dev
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - merry_pgdata:/var/lib/postgresql/data
 

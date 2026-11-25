@@ -12,8 +12,8 @@ on:
 env:
   PROJECT_ID: project-bc870ead-4152-48ad-9bf
   REGION: asia-northeast3
-  SERVICE: merry-api
-  IMAGE: asia-northeast3-docker.pkg.dev/project-bc870ead-4152-48ad-9bf/merry/api
+  SERVICE: nacho-api
+  IMAGE: asia-northeast3-docker.pkg.dev/project-bc870ead-4152-48ad-9bf/nacho/api
 
 permissions:
   contents: read
@@ -29,7 +29,7 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/846268423205/locations/global/workloadIdentityPools/github-pool/providers/github-provider
-          service_account: merry-ci@project-bc870ead-4152-48ad-9bf.iam.gserviceaccount.com
+          service_account: nacho-ci@project-bc870ead-4152-48ad-9bf.iam.gserviceaccount.com
 
       - uses: google-github-actions/setup-gcloud@v2
 
