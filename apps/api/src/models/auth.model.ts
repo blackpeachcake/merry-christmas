@@ -16,6 +16,15 @@ export interface KakaoProfile {
   imageUrl?: string;
 }
 
+// passport-kakao가 주는 원본 프로필(일부) — BE 내부에서 KakaoProfile로 매핑
+export interface KakaoRawProfile {
+  id: number | string;
+  username?: string;
+  _json?: {
+    properties?: { nickname?: string; profile_image?: string };
+  };
+}
+
 export interface SubPayload {
   sub: string;
 }

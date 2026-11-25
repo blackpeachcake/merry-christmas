@@ -1,13 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { KakaoProfile, SubPayload, TokenConfig } from '../models/auth.model';
+
+export const TOKEN_CONFIG = 'TOKEN_CONFIG';
 
 // access(15m)/refresh(14d)/pending(10m) 발급·검증. 타입별 secret 분리.
 @Injectable()
 export class TokenService {
   constructor(
     private readonly jwt: JwtService,
-    private readonly cfg: TokenConfig,
+    @Inject(TOKEN_CONFIG) private readonly cfg: TokenConfig,
   ) {}
 
   issueAccess(userId: string): string {
