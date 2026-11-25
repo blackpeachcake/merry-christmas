@@ -19,8 +19,7 @@ export class UsersService {
         providerUserId: input.providerUserId,
         nickname: input.nickname,
         imageUrl: input.imageUrl,
-        termsAgreedAt: new Date(),
-        termsVersion: input.termsVersion,
+        termsAgreedAt: new Date(), // 약관 동의 시점(= 동의 여부)
         // email 미저장 (의도적)
       },
     });

@@ -8,7 +8,6 @@ export class AuthService {
   constructor(
     private readonly users: UsersService,
     private readonly tokens: TokenService,
-    private readonly termsVersion: string,
   ) {}
 
   // 기존 유저 → access/refresh 발급. 신규 유저 → 계정 생성 X, 약관동의 대기 pending.
@@ -43,7 +42,6 @@ export class AuthService {
       providerUserId: profile.providerUserId,
       nickname: profile.nickname,
       imageUrl: profile.imageUrl,
-      termsVersion: this.termsVersion,
     });
     return {
       accessToken: this.tokens.issueAccess(user.id),

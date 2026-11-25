@@ -5,5 +5,4 @@ export interface CreateUserInput {
   providerUserId: string;
   nickname: string;
   imageUrl?: string;
-  termsVersion: string;
 }

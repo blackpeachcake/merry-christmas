@@ -34,7 +34,7 @@ apps/api/src/
 - `POST /auth/consent {pendingToken, agreeTerms, agreePrivacy}` → pending 검증 → `users.create(terms_agreed_at, terms_version)` → access+refresh 발급.
 
 ## 설정(환경변수) — Secret Manager(prod)/.env(로컬)
-`KAKAO_REST_API_KEY` · `KAKAO_CLIENT_SECRET` · `KAKAO_CALLBACK_URL` · `JWT_ACCESS_SECRET` · `JWT_REFRESH_SECRET` · `JWT_PENDING_SECRET` · `FE_REDIRECT_URL` · `TERMS_VERSION`
+`KAKAO_REST_API_KEY` · `KAKAO_CLIENT_SECRET` · `KAKAO_CALLBACK_URL` · `JWT_ACCESS_SECRET` · `JWT_REFRESH_SECRET` · `JWT_PENDING_SECRET` · `FE_REDIRECT_URL`
 
 ## DB
 `users` 테이블 마이그레이션(로컬 docker + prod Cloud SQL Auth Proxy). `UsersService`가 Prisma 사용.

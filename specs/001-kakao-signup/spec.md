@@ -24,7 +24,7 @@ FE "카카오로 시작" → GET /api/auth/kakao → 카카오 인증
 - [ ] 콜백에서 카카오 프로필(provider='kakao', providerUserId=카카오 id, nickname, imageUrl) 취득
 - [ ] **기존 유저**(provider+providerUserId 일치) → access JWT + refresh(httpOnly 쿠키) 발급 후 FE 리다이렉트
 - [ ] **신규 유저** → 계정 **생성하지 않고**, 약관동의 대기 상태(임시 토큰/식별자)로 FE 리다이렉트
-- [ ] `POST /api/auth/consent`(이용약관·개인정보 필수 동의) → `users` 생성(`terms_agreed_at`, `terms_version`) + 토큰 발급
+- [ ] `POST /api/auth/consent`(이용약관·개인정보 필수 동의) → `users` 생성(`terms_agreed_at`) + 토큰 발급
 - [ ] **email 미저장**, **중복 계정 허용**(구글 유저와 별개)
 - [ ] 닉네임/이미지는 카카오 값 자동 세팅(이후 수정은 별도 스펙)
 - [ ] access JWT 만료 짧게 / refresh는 httpOnly·Secure 쿠키

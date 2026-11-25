@@ -24,7 +24,6 @@ describe('UsersService (real DB)', () => {
       providerUserId: 'k1',
       nickname: '닉',
       imageUrl: 'http://img',
-      termsVersion: 'v1',
     });
     expect(created.id).toBeTruthy();
     expect(created.termsAgreedAt).toBeInstanceOf(Date);
@@ -35,8 +34,8 @@ describe('UsersService (real DB)', () => {
   });
 
   it('allows the same providerUserId under a different provider (dup accounts allowed)', async () => {
-    await svc.create({ provider: 'kakao', providerUserId: 'same', nickname: 'a', termsVersion: 'v1' });
-    const google = await svc.create({ provider: 'google', providerUserId: 'same', nickname: 'b', termsVersion: 'v1' });
+    await svc.create({ provider: 'kakao', providerUserId: 'same', nickname: 'a' });
+    const google = await svc.create({ provider: 'google', providerUserId: 'same', nickname: 'b' });
     expect(google.id).toBeTruthy();
   });
 });

@@ -17,7 +17,7 @@ const cfg = {
 const prisma = new PrismaService();
 const users = new UsersService(prisma);
 const tokens = new TokenService(new JwtService({}), cfg);
-const auth = new AuthService(users, tokens, 'v1');
+const auth = new AuthService(users, tokens);
 
 const profile: KakaoProfile = {
   provider: 'kakao',
@@ -51,7 +51,6 @@ describe('AuthService.handleKakaoProfile (real DB)', () => {
       provider: 'kakao',
       providerUserId: 'k1',
       nickname: '닉',
-      termsVersion: 'v1',
     });
     const res = await auth.handleKakaoProfile(profile);
     expect(res.status).toBe('authenticated');
@@ -74,7 +73,6 @@ describe('AuthService.consume (약관동의 → 계정 생성)', () => {
     const created = await users.findByProvider('kakao', 'k1');
     expect(created).not.toBeNull();
     expect(created?.termsAgreedAt).toBeInstanceOf(Date);
-    expect(created?.termsVersion).toBe('v1');
   });
 
   it('rejects and creates no user when a required consent is missing', async () => {
