@@ -31,7 +31,7 @@ apps/api/src/
 - `GET /auth/kakao/callback` → strategy가 프로필 파싱 → `authService.handleKakaoProfile()`:
   - 기존(`findByProvider` 히트) → access+refresh 발급, refresh 쿠키 set, `FE_REDIRECT_URL`로 리다이렉트.
   - 신규 → **pending JWT** 발급 → `FE_REDIRECT_URL/consent?token=...` 로 리다이렉트(계정 생성 X).
-- `POST /auth/consent {pendingToken, agreeTerms, agreePrivacy}` → pending 검증 → `users.create(terms_agreed_at, terms_version)` → access+refresh 발급.
+- `POST /auth/consent {pendingToken, agreeTerms, agreePrivacy}` → pending 검증 → `users.create(terms_agreed_at)` → access+refresh 발급.
 
 ## 설정(환경변수) — Secret Manager(prod)/.env(로컬)
 `KAKAO_REST_API_KEY` · `KAKAO_CLIENT_SECRET` · `KAKAO_CALLBACK_URL` · `JWT_ACCESS_SECRET` · `JWT_REFRESH_SECRET` · `JWT_PENDING_SECRET` · `FE_REDIRECT_URL`
