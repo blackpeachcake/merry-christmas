@@ -1,0 +1,15 @@
+# 로컬 dev DB. 사용: docker compose up -d  (docker 데몬 켜고)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: merry
+      POSTGRES_PASSWORD: merry
+      POSTGRES_DB: merry_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - merry_pgdata:/var/lib/postgresql/data
+
+volumes:
+  merry_pgdata:

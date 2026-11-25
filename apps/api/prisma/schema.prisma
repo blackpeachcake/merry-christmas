@@ -1,0 +1,26 @@
+// 로컬=dev DB / 리얼=prod DB 는 DATABASE_URL 환경변수로 분기 (코드 변경 없음)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 기초 엔티티. 나머지 모델(room/room_member/join_request/notification/invitation)은
+// 기능 단계에서 추가 — 설계: 디스커션 #6
+model User {
+  id             String    @id @default(uuid())
+  provider       String // 'google' | 'kakao'
+  providerUserId String    @map("provider_user_id")
+  nickname       String
+  imageUrl       String?   @map("image_url")
+  termsAgreedAt  DateTime? @map("terms_agreed_at")
+  termsVersion   String?   @map("terms_version")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([provider, providerUserId])
+  @@map("users")
+}
