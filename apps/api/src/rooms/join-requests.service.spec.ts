@@ -7,12 +7,14 @@ const svc = new RoomsService(prisma);
 
 beforeEach(async () => {
   await prisma.notification.deleteMany();
+  await prisma.invitation.deleteMany();
   await prisma.joinRequest.deleteMany();
   await prisma.roomMember.deleteMany();
   await prisma.room.deleteMany();
 });
 afterAll(async () => {
   await prisma.notification.deleteMany();
+  await prisma.invitation.deleteMany();
   await prisma.joinRequest.deleteMany();
   await prisma.roomMember.deleteMany();
   await prisma.room.deleteMany();
@@ -147,5 +149,55 @@ describe('RoomsService.rejectRequest (real DB)', () => {
       data: { roomId: room.id, userId: 'friend', status: 'approved' },
     });
     await expect(svc.rejectRequest(room.id, req.id)).rejects.toThrow();
+  });
+});
+
+describe('RoomsService.leave (real DB)', () => {
+  it('removes my room_member row', async () => {
+    const room = await svc.create('owner', { name: '방', capacity: 3 });
+    await prisma.roomMember.create({ data: { roomId: room.id, userId: 'friend', role: 'member' } });
+
+    await svc.leave('friend', room.id);
+
+    const member = await prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId: room.id, userId: 'friend' } },
+    });
+    expect(member).toBeNull();
+  });
+
+  it('rejects when I am the owner', async () => {
+    const room = await svc.create('owner', { name: '방', capacity: 3 });
+    await expect(svc.leave('owner', room.id)).rejects.toThrow();
+  });
+
+  it('throws 404 when I am not a member', async () => {
+    const room = await svc.create('owner', { name: '방', capacity: 3 });
+    await expect(svc.leave('stranger', room.id)).rejects.toThrow();
+  });
+
+  it('throws 404 when the room does not exist', async () => {
+    await expect(svc.leave('friend', 'nope')).rejects.toThrow();
+  });
+});
+
+describe('RoomsService.remove (real DB)', () => {
+  it('deletes the room along with its invitations/join_requests/room_members', async () => {
+    const room = await svc.create('owner', { name: '방', capacity: 3 });
+    await prisma.roomMember.create({ data: { roomId: room.id, userId: 'friend', role: 'member' } });
+    const invitation = await prisma.invitation.create({
+      data: { roomId: room.id, name: '초대장', ratio: '9:16', background: { type: 'color', value: '#fff' } },
+    });
+    const joinRequest = await prisma.joinRequest.create({
+      data: { roomId: room.id, userId: 'stranger', status: 'pending' },
+    });
+
+    await svc.remove(room.id);
+
+    expect(await prisma.room.findUnique({ where: { id: room.id } })).toBeNull();
+    expect(await prisma.invitation.findUnique({ where: { id: invitation.id } })).toBeNull();
+    expect(await prisma.joinRequest.findUnique({ where: { id: joinRequest.id } })).toBeNull();
+    expect(
+      await prisma.roomMember.findUnique({ where: { roomId_userId: { roomId: room.id, userId: 'friend' } } }),
+    ).toBeNull();
   });
 });

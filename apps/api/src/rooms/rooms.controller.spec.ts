@@ -47,4 +47,18 @@ describe('RoomsController', () => {
     await ctrl.reject({ params: { id: 'r1', reqId: 'j1' } } as any);
     expect(rooms.rejectRequest).toHaveBeenCalledWith('r1', 'j1');
   });
+
+  it('leave delegates to service with userId, roomId', async () => {
+    const rooms = { leave: vi.fn().mockResolvedValue(undefined) } as any;
+    const ctrl = new RoomsController(rooms);
+    await ctrl.leave({ userId: 'u1', params: { id: 'r1' } } as any);
+    expect(rooms.leave).toHaveBeenCalledWith('u1', 'r1');
+  });
+
+  it('remove delegates to service with roomId', async () => {
+    const rooms = { remove: vi.fn().mockResolvedValue(undefined) } as any;
+    const ctrl = new RoomsController(rooms);
+    await ctrl.remove({ params: { id: 'r1' } } as any);
+    expect(rooms.remove).toHaveBeenCalledWith('r1');
+  });
 });

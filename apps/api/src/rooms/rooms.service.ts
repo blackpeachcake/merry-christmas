@@ -149,5 +149,33 @@ export class RoomsService {
       },
     });
   }
+
+  async leave(userId: string, roomId: string): Promise<void> {
+    const room = await this.prisma.room.findUnique({ where: { id: roomId } });
+    if (!room) {
+      throw new NotFoundException('방을 찾을 수 없습니다');
+    }
+    if (room.ownerId === userId) {
+      throw new ForbiddenException('방장은 나갈 수 없습니다. 방을 삭제해주세요');
+    }
+    const member = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+    });
+    if (!member) {
+      throw new NotFoundException('방의 멤버가 아닙니다');
+    }
+    await this.prisma.roomMember.delete({ where: { roomId_userId: { roomId, userId } } });
+  }
+
+  // 호출 전 RoomOwnerGuard가 존재/방장 여부 확인 끝낸 상태.
+  // JoinRequest/Invitation은 roomId가 relation이 아니라 수동 삭제 필요(007과 동일 패턴).
+  async remove(roomId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.invitation.deleteMany({ where: { roomId } });
+      await tx.joinRequest.deleteMany({ where: { roomId } });
+      await tx.roomMember.deleteMany({ where: { roomId } });
+      await tx.room.delete({ where: { id: roomId } });
+    });
+  }
 }
 

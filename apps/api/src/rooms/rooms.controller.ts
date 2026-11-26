@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoomsService } from './rooms.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -55,5 +55,18 @@ export class RoomsController {
   @ApiOperation({ summary: '가입 신청 거절 (방장만)' })
   reject(@Req() req: ReqLike) {
     return this.rooms.rejectRequest(req.params.id, req.params.reqId);
+  }
+
+  @Post(':id/leave')
+  @ApiOperation({ summary: '방 나가기 (멤버만, 방장은 방 삭제를 써야 함)' })
+  leave(@Req() req: ReqLike) {
+    return this.rooms.leave(req.userId!, req.params.id);
+  }
+
+  @Delete(':id')
+  @UseGuards(RoomOwnerGuard)
+  @ApiOperation({ summary: '방 삭제 (방장만, 소속 초대장까지 CASCADE 삭제)' })
+  remove(@Req() req: ReqLike) {
+    return this.rooms.remove(req.params.id);
   }
 }
