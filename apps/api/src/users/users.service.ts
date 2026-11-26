@@ -35,4 +35,23 @@ export class UsersService {
       },
     });
   }
+
+  // 탈퇴: owner인 방은 방+소속 invitation/join_request/room_member까지 CASCADE 삭제(#6 결정).
+  // JoinRequest/Invitation은 roomId가 Prisma relation이 아니라 수동 삭제 필요.
+  async remove(userId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      const ownedRooms = await tx.room.findMany({ where: { ownerId: userId } });
+      const ownedRoomIds = ownedRooms.map((r) => r.id);
+
+      await tx.invitation.deleteMany({ where: { roomId: { in: ownedRoomIds } } });
+      await tx.joinRequest.deleteMany({ where: { roomId: { in: ownedRoomIds } } });
+      await tx.roomMember.deleteMany({ where: { roomId: { in: ownedRoomIds } } });
+      await tx.room.deleteMany({ where: { id: { in: ownedRoomIds } } });
+
+      await tx.roomMember.deleteMany({ where: { userId } });
+      await tx.joinRequest.deleteMany({ where: { userId } });
+      await tx.notification.deleteMany({ where: { userId } });
+      await tx.user.delete({ where: { id: userId } });
+    });
+  }
 }
