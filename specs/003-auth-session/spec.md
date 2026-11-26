@@ -8,7 +8,7 @@ Bearer(FE가 access 관리) → **쿠키 기반**으로 전환. httpOnly 쿠키�
 ## 2. 수용 기준
 - [x] `access_token` httpOnly·Secure·SameSite=Lax 쿠키(15m). **가드가 쿠키에서 읽음**(Bearer 헤더도 호환 허용)
 - [x] `refresh_token` httpOnly 쿠키(14d, path=/api/auth)
-- [x] 콜백/consent가 access·refresh를 **쿠키로 설정**(URL 프래그먼트·바디 토큰 제거)
+- [x] 콜백/terms가 access·refresh를 **쿠키로 설정**(URL 프래그먼트·바디 토큰 제거)
 - [x] `GET /api/auth/me` (인증) → 공개 유저(id·nickname·imageUrl). 미인증 401
 - [x] `POST /api/auth/refresh` — refresh 쿠키 검증 + `tokenVersion` 일치 → 새 access·refresh **회전** 쿠키. 무효/불일치 401
 - [x] `POST /api/auth/logout` — `tokenVersion++`(기존 refresh 전부 무효) + 쿠키 삭제
@@ -27,7 +27,7 @@ users: + tokenVersion Int @default(0)
 
 ## 5. 영향(기존 수정)
 - `TokenService.issueRefresh(userId, version)` / `verifyRefresh → { sub, v }`
-- `AuthController` 콜백/consent: 쿠키 설정 + 토큰 URL/바디 제거
+- `AuthController` 콜백/terms: 쿠키 설정 + 토큰 URL/바디 제거
 - `JwtAuthGuard`: 쿠키에서 access 읽기(헤더 fallback)
 - 공유: `/me` 응답 = `User`
 

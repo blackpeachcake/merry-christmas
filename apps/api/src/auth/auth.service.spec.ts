@@ -35,10 +35,10 @@ afterAll(async () => {
 });
 
 describe('AuthService.handleKakaoProfile (real DB)', () => {
-  it('returns consent_required with a pending token for a new kakao user', async () => {
+  it('returns terms_required with a pending token for a new kakao user', async () => {
     const res = await auth.handleKakaoProfile(profile);
-    expect(res.status).toBe('consent_required');
-    if (res.status === 'consent_required') {
+    expect(res.status).toBe('terms_required');
+    if (res.status === 'terms_required') {
       expect(tokens.verifyPending(res.pendingToken)).toMatchObject({
         providerUserId: 'k1',
         nickname: '닉',

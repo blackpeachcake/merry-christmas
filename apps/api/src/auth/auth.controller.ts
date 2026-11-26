@@ -22,7 +22,7 @@ import { UsersService } from '../users/users.service';
 import { KakaoAuthGuard } from './kakao-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { KakaoProfile } from '../models/auth.model';
-import { ConsentDto } from '../models/consent.dto';
+import { TermsDto } from '../models/terms.dto';
 import { setAccessCookie, setRefreshCookie, clearAuthCookies, ResLike } from './cookies';
 import type { User } from '@nacho/shared';
 
@@ -74,15 +74,15 @@ export class AuthController {
       path: '/api/auth',
       maxAge: PENDING_MAX_AGE,
     });
-    res.redirect(`${fe}/consent`);
+    res.redirect(`${fe}/terms`);
   }
 
-  @Post('consent')
+  @Post('terms')
   @ApiOperation({ summary: '약관동의 → 계정 생성 (신규 유저 가입 완료)' })
-  @ApiBody({ type: ConsentDto })
+  @ApiBody({ type: TermsDto })
   @ApiOkResponse({ description: '가입 완료 (토큰은 쿠키로 전달됨)' })
   @ApiResponse({ status: 401, description: 'pending_token 쿠키 없음/만료' })
-  async consent(@Req() req: ReqLike, @Body() dto: ConsentDto, @Res() res: ResLike & { json(b: unknown): void }): Promise<void> {
+  async terms(@Req() req: ReqLike, @Body() dto: TermsDto, @Res() res: ResLike & { json(b: unknown): void }): Promise<void> {
     const pending = req.cookies?.[PENDING_COOKIE];
     if (!pending) {
       throw new UnauthorizedException('약관동의 대기 상태가 아니거나 만료되었습니다');

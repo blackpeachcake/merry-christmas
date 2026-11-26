@@ -35,11 +35,11 @@ describe('AuthController.kakaoCallback', () => {
     expect(res.redirect).not.toHaveBeenCalledWith(expect.stringContaining('ACC'));
   });
 
-  it('new user → sets pending token as httpOnly cookie and redirects to consent (token NOT in URL)', async () => {
+  it('new user → sets pending token as httpOnly cookie and redirects to terms (token NOT in URL)', async () => {
     const auth = {
       handleKakaoProfile: vi
         .fn()
-        .mockResolvedValue({ status: 'consent_required', pendingToken: 'PEND' }),
+        .mockResolvedValue({ status: 'terms_required', pendingToken: 'PEND' }),
     } as any;
     const users = {} as any;
     const res = makeRes();
@@ -49,12 +49,12 @@ describe('AuthController.kakaoCallback', () => {
       'PEND',
       expect.objectContaining({ httpOnly: true }),
     );
-    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('/consent'));
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('/terms'));
     expect(res.redirect).not.toHaveBeenCalledWith(expect.stringContaining('PEND'));
   });
 });
 
-describe('AuthController.consent', () => {
+describe('AuthController.terms', () => {
   it('reads pending token from cookie, sets access/refresh cookies, returns empty body', async () => {
     const auth = {
       consume: vi.fn().mockResolvedValue({ accessToken: 'ACC', refreshToken: 'REF' }),
@@ -62,7 +62,7 @@ describe('AuthController.consent', () => {
     const users = {} as any;
     const res = makeRes();
     const req = { cookies: { pending_token: 'PEND' } } as any;
-    await new AuthController(auth, users, config).consent(
+    await new AuthController(auth, users, config).terms(
       req,
       { agreeTerms: true, agreePrivacy: true },
       res,
@@ -89,7 +89,7 @@ describe('AuthController.consent', () => {
     const users = {} as any;
     const res = makeRes();
     await expect(
-      new AuthController(auth, users, config).consent(
+      new AuthController(auth, users, config).terms(
         { cookies: {} } as any,
         { agreeTerms: true, agreePrivacy: true },
         res,

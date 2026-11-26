@@ -37,4 +37,4 @@ export interface RefreshPayload {
 // 카카오 프로필 처리 결과: 기존 유저면 토큰, 신규면 약관동의 대기(pending)
 export type AuthResult =
   | { status: 'authenticated'; accessToken: string; refreshToken: string }
-  | { status: 'consent_required'; pendingToken: string };
+  | { status: 'terms_required'; pendingToken: string };
