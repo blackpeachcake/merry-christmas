@@ -73,3 +73,17 @@ model Notification {
 
   @@map("notifications")
 }
+
+model Invitation {
+  id           String   @id @default(uuid())
+  roomId       String   @map("room_id")
+  name         String
+  ratio        String // '9:16' | '4:5' | '1:1' | '16:9' (생성 후 불변)
+  background   Json
+  thumbnailUrl String?  @map("thumbnail_url")
+  yjsState     Bytes?   @map("yjs_state") // 007(실시간 공동편집)에서 사용 — 이번 스펙은 손대지 않음
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("invitations")
+}

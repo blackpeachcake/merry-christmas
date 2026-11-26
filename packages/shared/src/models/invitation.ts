@@ -15,3 +15,17 @@ export interface Invitation {
   updatedAt: string;
   // 본문(블록)은 Yjs 문서로 실시간 채널 전달 — 공유 타입 아님
 }
+
+// POST /api/rooms/:id/invitations
+export interface CreateInvitationRequest {
+  name: string;
+  ratio: Ratio;
+  background: Background;
+}
+
+// PATCH /api/invitations/:id
+export interface UpdateInvitationRequest {
+  name?: string;
+  background?: Background;
+  thumbnailUrl?: string;
+}

@@ -6,6 +6,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { InvitationsModule } from './invitations/invitations.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     AuthModule,
     RoomsModule,
     NotificationsModule,
+    InvitationsModule,
   ],
   controllers: [HealthController, DbHealthController],
   providers: [PrismaService],
