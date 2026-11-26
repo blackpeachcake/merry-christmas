@@ -1,6 +1,6 @@
 # 010 — Cloudinary presigned 업로드 (BE)
 
-상태: **스펙 작성** · 출처: [#12 기획](https://github.com/blackpeachcake/nacho/discussions/12) · [#6 BE 설계](https://github.com/blackpeachcake/nacho/discussions/6)
+상태: **구현 완료** · 출처: [#12 기획](https://github.com/blackpeachcake/nacho/discussions/12) · [#6 BE 설계](https://github.com/blackpeachcake/nacho/discussions/6)
 
 ## 1. 무엇을 / 왜
 프로필 이미지(009) · 초대장 배경/썸네일(006) 업로드 시, 파일을 BE 서버로 보내지 않고 **FE가 Cloudinary로 직접 업로드**하게 한다. BE는 그 업로드 요청에 필요한 서명(signature)만 발급한다.
@@ -11,7 +11,7 @@
 - 실제 파일 업로드는 FE→Cloudinary 직접 호출(BE 경유 안 함) — FE 작업.
 
 ## 3. 수용 기준 (Acceptance Criteria)
-- [ ] `POST /api/uploads/signature` (Jwt)
+- [x] `POST /api/uploads/signature` (Jwt)
   - 응답: `{ signature, timestamp, apiKey, cloudName }`
   - `timestamp`는 서버 현재 시각(유닉스 초), `signature`는 `sha1(timestamp=...&api_secret=...)` 형태로 파라미터 알파벳순 정렬 후 해시 (Cloudinary 표준 서명 규칙)
   - 미인증 시 401
