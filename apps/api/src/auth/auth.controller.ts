@@ -9,7 +9,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { KakaoAuthGuard } from './kakao-auth.guard';
 import { KakaoProfile } from '../models/auth.model';
@@ -41,7 +47,12 @@ export class AuthController {
 
   @Get('kakao')
   @UseGuards(KakaoAuthGuard)
-  @ApiOperation({ summary: '카카오 로그인 시작 — 카카오 인증으로 302' })
+  @ApiOperation({
+    summary: '카카오 로그인 시작',
+    description:
+      '브라우저를 이 URL로 **이동**시키면(fetch 아님) 카카오 로그인 페이지로 302. 끝나면 `/api/auth/kakao/callback`으로 돌아옴.',
+  })
+  @ApiResponse({ status: 302, description: '카카오 인증 페이지로 리다이렉트' })
   kakao(): void {
     // 가드가 카카오 인증으로 리다이렉트
   }
@@ -49,7 +60,13 @@ export class AuthController {
   @Get('kakao/callback')
   @UseGuards(KakaoAuthGuard)
   @ApiOperation({
-    summary: '카카오 콜백 — 기존 유저면 토큰(+refresh 쿠키), 신규면 pending 쿠키 + 약관동의 페이지로 리다이렉트',
+    summary: '카카오 콜백 (카카오가 호출)',
+    description:
+      '**기존 유저** → `refresh_token` 쿠키 설정 + FE로 `#access_token=...` 리다이렉트.\n\n**신규 유저** → 계정 생성 X, `pending_token`을 **httpOnly 쿠키**로 설정 + FE `/consent`로 리다이렉트(URL에 토큰 없음).',
+  })
+  @ApiResponse({
+    status: 302,
+    description: '기존→FE(#access_token), 신규→FE /consent (pending 쿠키 설정)',
   })
   async kakaoCallback(@Req() req: ReqLike, @Res() res: ResLike): Promise<void> {
     const profile = req.user as KakaoProfile;
@@ -72,11 +89,17 @@ export class AuthController {
   }
 
   @Post('consent')
-  @ApiOperation({ summary: '약관동의(pending 쿠키 필요) → 계정 생성 → access 토큰(+refresh 쿠키)' })
+  @ApiOperation({
+    summary: '약관동의 → 계정 생성 (신규 유저 가입 완료)',
+    description:
+      '신규 유저가 약관화면에서 호출. **`pending_token` 쿠키 필요**(콜백에서 설정됨, 브라우저 자동 전송 — fetch 시 `credentials:"include"`). 바디엔 동의 여부만. 성공 시 계정 생성 + `pending_token` 삭제 + `refresh_token` 쿠키 + `access_token` 반환.',
+  })
   @ApiBody({ type: ConsentDto })
   @ApiOkResponse({
+    description: '가입 완료 — access 토큰(refresh는 쿠키)',
     schema: { type: 'object', properties: { accessToken: { type: 'string' } } },
   })
+  @ApiResponse({ status: 401, description: 'pending_token 쿠키 없음/만료' })
   async consent(
     @Req() req: ReqLike,
     @Body() dto: ConsentDto,
