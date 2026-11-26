@@ -124,3 +124,34 @@ describe('UsersService.remove (real DB)', () => {
     expect(await svc.findById(applicant.id)).toBeNull();
   });
 });
+
+describe('UsersService.update (real DB)', () => {
+  it('updates only nickname when imageUrl is omitted', async () => {
+    const user = await svc.create({ provider: 'kakao', providerUserId: 'p1', nickname: '전', imageUrl: 'http://old' });
+    const updated = await svc.update(user.id, { nickname: '후' });
+    expect(updated.nickname).toBe('후');
+    expect(updated.imageUrl).toBe('http://old');
+  });
+
+  it('updates only imageUrl when nickname is omitted', async () => {
+    const user = await svc.create({ provider: 'kakao', providerUserId: 'p2', nickname: '유지' });
+    const updated = await svc.update(user.id, { imageUrl: 'http://new' });
+    expect(updated.nickname).toBe('유지');
+    expect(updated.imageUrl).toBe('http://new');
+  });
+
+  it('rejects when neither field is given', async () => {
+    const user = await svc.create({ provider: 'kakao', providerUserId: 'p3', nickname: '닉' });
+    await expect(svc.update(user.id, {})).rejects.toThrow();
+  });
+
+  it('rejects an empty nickname', async () => {
+    const user = await svc.create({ provider: 'kakao', providerUserId: 'p4', nickname: '닉' });
+    await expect(svc.update(user.id, { nickname: '   ' })).rejects.toThrow();
+  });
+
+  it('rejects a nickname longer than 20 chars', async () => {
+    const user = await svc.create({ provider: 'kakao', providerUserId: 'p5', nickname: '닉' });
+    await expect(svc.update(user.id, { nickname: '가'.repeat(21) })).rejects.toThrow();
+  });
+});

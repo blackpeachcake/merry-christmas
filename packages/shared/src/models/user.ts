@@ -4,3 +4,9 @@ export interface User {
   nickname: string;
   imageUrl?: string;
 }
+
+// PATCH /api/me
+export interface UpdateUserRequest {
+  nickname?: string;
+  imageUrl?: string;
+}

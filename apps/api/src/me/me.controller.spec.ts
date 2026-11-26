@@ -15,3 +15,15 @@ describe('MeController.remove', () => {
     expect(res.json).toHaveBeenCalledWith({});
   });
 });
+
+describe('MeController.update', () => {
+  it('delegates to UsersService.update with req.userId and dto, returns mapped User', async () => {
+    const users = {
+      update: vi.fn().mockResolvedValue({ id: 'u1', nickname: '새닉', imageUrl: 'http://img' }),
+    } as any;
+    const ctrl = new MeController(users);
+    const out = await ctrl.update({ userId: 'u1' } as any, { nickname: '새닉' });
+    expect(users.update).toHaveBeenCalledWith('u1', { nickname: '새닉' });
+    expect(out).toEqual({ id: 'u1', nickname: '새닉', imageUrl: 'http://img' });
+  });
+});
