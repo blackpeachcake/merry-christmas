@@ -29,6 +29,11 @@ export interface SubPayload {
   sub: string;
 }
 
+export interface RefreshPayload {
+  sub: string;
+  v: number; // users.tokenVersion — 로그아웃 시 불일치시키기 위해 사용
+}
+
 // 카카오 프로필 처리 결과: 기존 유저면 토큰, 신규면 약관동의 대기(pending)
 export type AuthResult =
   | { status: 'authenticated'; accessToken: string; refreshToken: string }

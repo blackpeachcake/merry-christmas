@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { TokenService } from './token.service';
 import type { ConsentRequest } from '@nacho/shared';
@@ -21,7 +21,7 @@ export class AuthService {
       return {
         status: 'authenticated',
         accessToken: this.tokens.issueAccess(user.id),
-        refreshToken: this.tokens.issueRefresh(user.id),
+        refreshToken: this.tokens.issueRefresh(user.id, user.tokenVersion),
       };
     }
     return {
@@ -47,7 +47,25 @@ export class AuthService {
     });
     return {
       accessToken: this.tokens.issueAccess(user.id),
-      refreshToken: this.tokens.issueRefresh(user.id),
+      refreshToken: this.tokens.issueRefresh(user.id, user.tokenVersion),
     };
+  }
+
+  // refresh 쿠키 검증 + tokenVersion 일치 확인 → 새 access/refresh 회전 발급
+  async refresh(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+    const { sub, v } = this.tokens.verifyRefresh(refreshToken);
+    const user = await this.users.findById(sub);
+    if (!user || user.tokenVersion !== v) {
+      throw new UnauthorizedException('유효하지 않은 세션입니다');
+    }
+    return {
+      accessToken: this.tokens.issueAccess(user.id),
+      refreshToken: this.tokens.issueRefresh(user.id, user.tokenVersion),
+    };
+  }
+
+  // tokenVersion++ → 기존에 발급된 refresh 전부 무효화
+  async logout(userId: string): Promise<void> {
+    await this.users.bumpTokenVersion(userId);
   }
 }

@@ -38,4 +38,17 @@ describe('UsersService (real DB)', () => {
     const google = await svc.create({ provider: 'google', providerUserId: 'same', nickname: 'b' });
     expect(google.id).toBeTruthy();
   });
+
+  it('findById returns the user, or null when missing', async () => {
+    const created = await svc.create({ provider: 'kakao', providerUserId: 'k2', nickname: 'c' });
+    expect((await svc.findById(created.id))?.id).toBe(created.id);
+    expect(await svc.findById('no-such-id')).toBeNull();
+  });
+
+  it('bumpTokenVersion increments tokenVersion', async () => {
+    const created = await svc.create({ provider: 'kakao', providerUserId: 'k3', nickname: 'd' });
+    expect(created.tokenVersion).toBe(0);
+    await svc.bumpTokenVersion(created.id);
+    expect((await svc.findById(created.id))?.tokenVersion).toBe(1);
+  });
 });

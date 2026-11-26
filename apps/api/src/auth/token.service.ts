@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { KakaoProfile, SubPayload, TokenConfig } from '../models/auth.model';
+import { KakaoProfile, RefreshPayload, SubPayload, TokenConfig } from '../models/auth.model';
 
 export const TOKEN_CONFIG = 'TOKEN_CONFIG';
 
@@ -19,9 +19,9 @@ export class TokenService {
     );
   }
 
-  issueRefresh(userId: string): string {
+  issueRefresh(userId: string, version: number): string {
     return this.jwt.sign(
-      { sub: userId },
+      { sub: userId, v: version },
       { secret: this.cfg.refreshSecret, expiresIn: this.cfg.refreshTtl },
     );
   }
@@ -37,7 +37,7 @@ export class TokenService {
     return this.jwt.verify(token, { secret: this.cfg.accessSecret });
   }
 
-  verifyRefresh(token: string): SubPayload {
+  verifyRefresh(token: string): RefreshPayload {
     return this.jwt.verify(token, { secret: this.cfg.refreshSecret });
   }
 

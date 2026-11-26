@@ -12,6 +12,17 @@ export class UsersService {
     });
   }
 
+  findById(id: string) {
+    return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  bumpTokenVersion(id: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { tokenVersion: { increment: 1 } },
+    });
+  }
+
   create(input: CreateUserInput) {
     return this.prisma.user.create({
       data: {

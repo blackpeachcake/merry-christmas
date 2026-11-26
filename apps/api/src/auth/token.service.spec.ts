@@ -41,4 +41,10 @@ describe('TokenService', () => {
     const access = svc.issueAccess('user-1');
     expect(() => svc.verifyRefresh(access)).toThrow();
   });
+
+  it('issues a refresh token carrying the userId and token version', () => {
+    const svc = make();
+    const token = svc.issueRefresh('user-1', 2);
+    expect(svc.verifyRefresh(token)).toMatchObject({ sub: 'user-1', v: 2 });
+  });
 });

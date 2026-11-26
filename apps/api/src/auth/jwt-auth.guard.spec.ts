@@ -14,8 +14,11 @@ const cfg = {
 const tokens = new TokenService(new JwtService({}), cfg);
 const guard = new JwtAuthGuard(tokens);
 
-function ctx(authHeader?: string) {
-  const req: any = { headers: authHeader ? { authorization: authHeader } : {} };
+function ctx(authHeader?: string, cookies?: Record<string, string>) {
+  const req: any = {
+    headers: authHeader ? { authorization: authHeader } : {},
+    cookies: cookies ?? {},
+  };
   return {
     req,
     switchToHttp: () => ({ getRequest: () => req }),
@@ -35,5 +38,19 @@ describe('JwtAuthGuard', () => {
 
   it('rejects an invalid token', () => {
     expect(() => guard.canActivate(ctx('Bearer not.a.token'))).toThrow();
+  });
+
+  it('allows a valid access token from the access_token cookie and sets req.userId', () => {
+    const c = ctx(undefined, { access_token: tokens.issueAccess('user-2') });
+    expect(guard.canActivate(c)).toBe(true);
+    expect(c.req.userId).toBe('user-2');
+  });
+
+  it('prefers the cookie over the Authorization header when both are present', () => {
+    const c = ctx(`Bearer ${tokens.issueAccess('user-1')}`, {
+      access_token: tokens.issueAccess('user-2'),
+    });
+    guard.canActivate(c);
+    expect(c.req.userId).toBe('user-2');
   });
 });
