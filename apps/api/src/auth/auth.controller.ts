@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { KakaoAuthGuard } from './kakao-auth.guard';
-import type { ConsentRequest } from '@nacho/shared';
 import { KakaoProfile } from '../models/auth.model';
+import { ConsentDto } from '../models/consent.dto';
 
 const REFRESH_COOKIE = 'refresh_token';
 const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 * 1000; // 14일
@@ -18,6 +19,7 @@ interface ReqLike {
   user?: unknown;
 }
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -27,12 +29,16 @@ export class AuthController {
 
   @Get('kakao')
   @UseGuards(KakaoAuthGuard)
+  @ApiOperation({ summary: '카카오 로그인 시작 — 카카오 인증으로 302' })
   kakao(): void {
     // 가드가 카카오 인증으로 리다이렉트
   }
 
   @Get('kakao/callback')
   @UseGuards(KakaoAuthGuard)
+  @ApiOperation({
+    summary: '카카오 콜백 — 기존 유저면 토큰(+refresh 쿠키)으로, 신규면 약관동의 페이지로 리다이렉트',
+  })
   async kakaoCallback(@Req() req: ReqLike, @Res() res: ResLike): Promise<void> {
     const profile = req.user as KakaoProfile;
     const fe = this.config.getOrThrow<string>('FE_REDIRECT_URL');
@@ -47,7 +53,12 @@ export class AuthController {
   }
 
   @Post('consent')
-  async consent(@Body() dto: ConsentRequest, @Res() res: ResLike): Promise<void> {
+  @ApiOperation({ summary: '약관동의 → 계정 생성 → access 토큰(+refresh 쿠키)' })
+  @ApiBody({ type: ConsentDto })
+  @ApiOkResponse({
+    schema: { type: 'object', properties: { accessToken: { type: 'string' } } },
+  })
+  async consent(@Body() dto: ConsentDto, @Res() res: ResLike): Promise<void> {
     const tokens = await this.auth.consume(dto);
     this.setRefreshCookie(res, tokens.refreshToken);
     res.json({ accessToken: tokens.accessToken });
