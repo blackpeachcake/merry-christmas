@@ -9,4 +9,4 @@
 - [x] T7. `RoomsService.rejectRequest` (real DB) — 상태변경+reject_count++ +알림, 중복처리 400
 - [x] T8. `InviteController`(GET /invite/:roomId) + `RoomsController` 라우트 4개 추가(mock service 테스트) + `JoinRoomDto`
 - [x] T9. 모듈 연결(`RoomsModule`) + 빌드/부팅 확인
-- [ ] T10. prod 마이그레이션 + 배포
+- [x] T10. prod 마이그레이션 + 배포
