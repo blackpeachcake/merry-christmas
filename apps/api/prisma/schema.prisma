@@ -23,3 +23,28 @@ model User {
   @@unique([provider, providerUserId])
   @@map("users")
 }
+
+model Room {
+  id           String       @id @default(uuid())
+  name         String
+  thumbnailUrl String?      @map("thumbnail_url")
+  ownerId      String       @map("owner_id")
+  inviteCode   String       @unique @map("invite_code")
+  capacity     Int // 1~8 (방장 포함 총원)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  members      RoomMember[]
+
+  @@map("rooms")
+}
+
+model RoomMember {
+  roomId   String   @map("room_id")
+  userId   String   @map("user_id")
+  role     String // owner | member
+  joinedAt DateTime @default(now()) @map("joined_at")
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@map("room_members")
+}

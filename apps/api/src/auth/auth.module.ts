@@ -6,6 +6,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { TokenService, TOKEN_CONFIG } from './token.service';
 import { KakaoStrategy } from './kakao.strategy';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { TokenConfig } from '../models/auth.model';
@@ -21,6 +22,7 @@ import { TokenConfig } from '../models/auth.model';
     UsersService,
     PrismaService,
     KakaoStrategy,
+    JwtAuthGuard,
     {
       provide: TOKEN_CONFIG,
       inject: [ConfigService],
@@ -34,5 +36,6 @@ import { TokenConfig } from '../models/auth.model';
       }),
     },
   ],
+  exports: [TokenService, JwtAuthGuard], // RoomsModule 등 보호 라우트에서 사용
 })
 export class AuthModule {}

@@ -10,8 +10,16 @@ export interface Room {
   thumbnailUrl?: string;
   ownerId: string;
   inviteCode: string;
+  capacity: number; // 방장 포함 총원 (1~8)
   createdAt: string;
   updatedAt: string;
+}
+
+// POST /api/rooms
+export interface CreateRoomRequest {
+  name: string;
+  thumbnailUrl?: string;
+  capacity: number; // 1~8
 }
 
 export interface RoomMember {
