@@ -4,3 +4,4 @@ export * from './models/user';
 export * from './models/room';
 export * from './models/invitation';
 export * from './models/notification';
+export * from './models/upload';

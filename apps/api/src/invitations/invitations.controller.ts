@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { InvitationsService } from './invitations.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CreateInvitationDto, UpdateInvitationDto } from '../models/invitation.dto';
+import { CreateInvitationDto, InvitationDto, UpdateInvitationDto } from '../models/invitation.dto';
 
 interface ReqLike {
   userId?: string;
@@ -18,18 +18,21 @@ export class InvitationsController {
 
   @Post('rooms/:id/invitations')
   @ApiOperation({ summary: '초대장 생성 (방 멤버)' })
+  @ApiOkResponse({ type: InvitationDto })
   create(@Req() req: ReqLike, @Body() dto: CreateInvitationDto) {
     return this.invitations.create(req.userId!, req.params.id, dto);
   }
 
   @Get('rooms/:id/invitations')
   @ApiOperation({ summary: '방의 초대장 목록 (방 멤버)' })
+  @ApiOkResponse({ type: InvitationDto, isArray: true })
   listByRoom(@Req() req: ReqLike) {
     return this.invitations.listByRoom(req.userId!, req.params.id);
   }
 
   @Patch('invitations/:id')
   @ApiOperation({ summary: '초대장 메타 수정 (방 멤버, ratio 제외)' })
+  @ApiOkResponse({ type: InvitationDto })
   update(@Req() req: ReqLike, @Body() dto: UpdateInvitationDto) {
     return this.invitations.update(req.userId!, req.params.id, dto);
   }

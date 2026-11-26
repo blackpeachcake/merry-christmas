@@ -1,6 +1,7 @@
 import { Controller, Get, Req } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoomsService } from './rooms.service';
+import { RoomPreviewDto } from '../models/room.dto';
 
 interface ReqLike {
   params: { roomId: string };
@@ -14,6 +15,7 @@ export class InviteController {
 
   @Get(':roomId')
   @ApiOperation({ summary: '방 미리보기 (비로그인, 이름만)' })
+  @ApiOkResponse({ type: RoomPreviewDto })
   preview(@Req() req: ReqLike) {
     return this.rooms.preview(req.params.roomId);
   }

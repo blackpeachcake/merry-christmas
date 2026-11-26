@@ -1,10 +1,10 @@
 import { Body, Controller, Delete, Patch, Req, Res, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { User } from '@nacho/shared';
 import { UsersService } from '../users/users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { clearAuthCookies, ResLike } from '../auth/cookies';
-import { UpdateUserDto } from '../models/user.dto';
+import { UpdateUserDto, UserDto } from '../models/user.dto';
 
 interface ReqLike {
   userId?: string;
@@ -19,6 +19,7 @@ export class MeController {
 
   @Patch()
   @ApiOperation({ summary: '프로필 수정 (닉네임/이미지, 최소 1개)' })
+  @ApiOkResponse({ type: UserDto })
   async update(@Req() req: ReqLike, @Body() dto: UpdateUserDto): Promise<User> {
     const user = await this.users.update(req.userId!, dto);
     return { id: user.id, nickname: user.nickname, imageUrl: user.imageUrl ?? undefined };

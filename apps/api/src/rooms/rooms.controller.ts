@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { RoomsService } from './rooms.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RoomOwnerGuard } from './room-owner.guard';
-import { CreateRoomDto } from '../models/room.dto';
+import { CreateRoomDto, JoinRequestDto, RoomDto } from '../models/room.dto';
 import { JoinRoomDto } from '../models/join-room.dto';
 
 interface ReqLike {
@@ -20,12 +20,14 @@ export class RoomsController {
 
   @Post()
   @ApiOperation({ summary: '방 만들기 (정원 1~8, 방장 포함). 생성자가 방장이 됨' })
+  @ApiOkResponse({ type: RoomDto })
   create(@Req() req: ReqLike, @Body() dto: CreateRoomDto) {
     return this.rooms.create(req.userId!, dto);
   }
 
   @Get()
   @ApiOperation({ summary: '내 방 목록 (내가 owner이거나 member)' })
+  @ApiOkResponse({ type: RoomDto, isArray: true })
   listMine(@Req() req: ReqLike) {
     return this.rooms.listMine(req.userId!);
   }
@@ -39,6 +41,7 @@ export class RoomsController {
   @Get(':id/requests')
   @UseGuards(RoomOwnerGuard)
   @ApiOperation({ summary: '가입 신청 목록 (방장만)' })
+  @ApiOkResponse({ type: JoinRequestDto, isArray: true })
   listRequests(@Req() req: ReqLike) {
     return this.rooms.listPendingRequests(req.params.id);
   }

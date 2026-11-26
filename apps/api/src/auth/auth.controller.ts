@@ -23,6 +23,7 @@ import { KakaoAuthGuard } from './kakao-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { KakaoProfile } from '../models/auth.model';
 import { TermsDto } from '../models/terms.dto';
+import { UserDto } from '../models/user.dto';
 import { setAccessCookie, setRefreshCookie, clearAuthCookies, ResLike } from './cookies';
 import type { User } from '@nacho/shared';
 
@@ -98,6 +99,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: '내 프로필 조회' })
+  @ApiOkResponse({ type: UserDto })
   @ApiResponse({ status: 401, description: '미인증' })
   async me(@Req() req: ReqLike): Promise<User> {
     const user = await this.users.findById(req.userId as string);
