@@ -8,5 +8,5 @@
 - [x] T6. `InvitationsService.remove` (real DB) — 정상/방장아니면 403/없으면 404
 - [x] T7. `InvitationsController` + 라우트 4개(mock service 테스트)
 - [x] T8. 모듈 연결(`InvitationsModule`) + tsc/vitest/빌드/부팅 확인
-- [ ] T9. 커밋·푸시 + prod 배포 확인
-- [ ] T10. 디스커션 #6에 요약 코멘트
+- [x] T9. 커밋·푸시 + prod 배포 확인
+- [x] T10. 디스커션 #6에 요약 코멘트
