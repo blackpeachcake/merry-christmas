@@ -1,7 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import type { CreateRoomRequest } from '@nacho/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { generateInviteCode } from '../common/invite-code';
+
+const MAX_REJECT_COUNT = 3; // @nacho/shared의 동일 상수 — BE는 런타임 값을 shared에서 import하지 않음(타입만)
 
 @Injectable()
 export class RoomsService {
@@ -45,6 +53,100 @@ export class RoomsService {
         OR: [{ ownerId: userId }, { members: { some: { userId } } }],
       },
       orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  // 비로그인 미리보기 — 이름만
+  async preview(roomId: string): Promise<{ name: string }> {
+    const room = await this.prisma.room.findUnique({ where: { id: roomId } });
+    if (!room) {
+      throw new NotFoundException('방을 찾을 수 없습니다');
+    }
+    return { name: room.name };
+  }
+
+  async joinByCode(userId: string, roomId: string, code: string): Promise<void> {
+    const room = await this.prisma.room.findUnique({ where: { id: roomId } });
+    if (!room || room.inviteCode !== code) {
+      throw new BadRequestException('초대 코드가 올바르지 않습니다');
+    }
+    const member = await this.prisma.roomMember.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+    });
+    if (member) {
+      throw new ConflictException('이미 방의 멤버입니다');
+    }
+    const existing = await this.prisma.joinRequest.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+    });
+    if (existing?.status === 'pending') {
+      return;
+    }
+    if (existing && existing.rejectCount >= MAX_REJECT_COUNT) {
+      throw new ForbiddenException('거절 횟수를 초과하여 재신청할 수 없습니다');
+    }
+    await this.prisma.joinRequest.upsert({
+      where: { roomId_userId: { roomId, userId } },
+      create: { roomId, userId, status: 'pending' },
+      update: { status: 'pending' },
+    });
+    await this.prisma.notification.create({
+      data: {
+        userId: room.ownerId,
+        type: 'join_requested',
+        payload: { roomId, roomName: room.name, requesterId: userId },
+      },
+    });
+  }
+
+  listPendingRequests(roomId: string) {
+    return this.prisma.joinRequest.findMany({
+      where: { roomId, status: 'pending' },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async approveRequest(roomId: string, reqId: string): Promise<void> {
+    const req = await this.prisma.joinRequest.findUnique({ where: { id: reqId } });
+    if (!req || req.roomId !== roomId || req.status !== 'pending') {
+      throw new BadRequestException('처리할 수 없는 신청입니다');
+    }
+    const room = await this.prisma.room.findUniqueOrThrow({ where: { id: roomId } });
+    const memberCount = await this.prisma.roomMember.count({ where: { roomId } });
+    if (memberCount >= room.capacity) {
+      throw new BadRequestException('방 정원이 가득 찼습니다');
+    }
+    await this.prisma.$transaction([
+      this.prisma.roomMember.create({
+        data: { roomId, userId: req.userId, role: 'member' },
+      }),
+      this.prisma.joinRequest.update({ where: { id: reqId }, data: { status: 'approved' } }),
+    ]);
+    await this.prisma.notification.create({
+      data: {
+        userId: req.userId,
+        type: 'join_approved',
+        payload: { roomId, roomName: room.name },
+      },
+    });
+  }
+
+  async rejectRequest(roomId: string, reqId: string): Promise<void> {
+    const req = await this.prisma.joinRequest.findUnique({ where: { id: reqId } });
+    if (!req || req.roomId !== roomId || req.status !== 'pending') {
+      throw new BadRequestException('처리할 수 없는 신청입니다');
+    }
+    const room = await this.prisma.room.findUniqueOrThrow({ where: { id: roomId } });
+    await this.prisma.joinRequest.update({
+      where: { id: reqId },
+      data: { status: 'rejected', rejectCount: { increment: 1 } },
+    });
+    await this.prisma.notification.create({
+      data: {
+        userId: req.userId,
+        type: 'join_rejected',
+        payload: { roomId, roomName: room.name },
+      },
     });
   }
 }

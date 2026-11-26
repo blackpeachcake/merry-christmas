@@ -19,4 +19,32 @@ describe('RoomsController', () => {
     await ctrl.listMine({ userId: 'u1' } as any);
     expect(rooms.listMine).toHaveBeenCalledWith('u1');
   });
+
+  it('join delegates to service with userId, roomId, code', async () => {
+    const rooms = { joinByCode: vi.fn().mockResolvedValue(undefined) } as any;
+    const ctrl = new RoomsController(rooms);
+    await ctrl.join({ userId: 'u1', params: { id: 'r1' } } as any, { code: 'ABC12345' });
+    expect(rooms.joinByCode).toHaveBeenCalledWith('u1', 'r1', 'ABC12345');
+  });
+
+  it('listRequests delegates to service with roomId', async () => {
+    const rooms = { listPendingRequests: vi.fn().mockResolvedValue([]) } as any;
+    const ctrl = new RoomsController(rooms);
+    await ctrl.listRequests({ params: { id: 'r1' } } as any);
+    expect(rooms.listPendingRequests).toHaveBeenCalledWith('r1');
+  });
+
+  it('approve delegates to service with roomId, reqId', async () => {
+    const rooms = { approveRequest: vi.fn().mockResolvedValue(undefined) } as any;
+    const ctrl = new RoomsController(rooms);
+    await ctrl.approve({ params: { id: 'r1', reqId: 'j1' } } as any);
+    expect(rooms.approveRequest).toHaveBeenCalledWith('r1', 'j1');
+  });
+
+  it('reject delegates to service with roomId, reqId', async () => {
+    const rooms = { rejectRequest: vi.fn().mockResolvedValue(undefined) } as any;
+    const ctrl = new RoomsController(rooms);
+    await ctrl.reject({ params: { id: 'r1', reqId: 'j1' } } as any);
+    expect(rooms.rejectRequest).toHaveBeenCalledWith('r1', 'j1');
+  });
 });

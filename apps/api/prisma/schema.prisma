@@ -49,3 +49,27 @@ model RoomMember {
   @@id([roomId, userId])
   @@map("room_members")
 }
+
+model JoinRequest {
+  id          String   @id @default(uuid())
+  roomId      String   @map("room_id")
+  userId      String   @map("user_id")
+  status      String // pending | approved | rejected
+  rejectCount Int      @default(0) @map("reject_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([roomId, userId])
+  @@map("join_requests")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  type      String // join_requested | join_approved | join_rejected
+  payload   Json
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
