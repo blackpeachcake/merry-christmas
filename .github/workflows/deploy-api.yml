@@ -44,6 +44,27 @@ jobs:
           docker push ${{ env.IMAGE }}:${{ github.sha }}
           docker push ${{ env.IMAGE }}:latest
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Migrate prod DB (prisma db push via Cloud SQL Auth Proxy)
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+          curl -sSL -o cloud-sql-proxy \
+            https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.1/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy --port 5432 ${{ env.PROJECT_ID }}:${{ env.REGION }}:nacho-pg &
+          sleep 5
+
+          RAW_URL=$(gcloud secrets versions access latest --secret=nacho-database-url)
+          PASS=$(echo "$RAW_URL" | sed -n 's#.*://nacho:\([^@]*\)@.*#\1#p')
+          echo "::add-mask::$PASS"
+          DATABASE_URL="postgresql://nacho:${PASS}@127.0.0.1:5432/nacho_prod?schema=public" \
+            pnpm --filter api exec prisma db push --skip-generate
+
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy ${{ env.SERVICE }} \
