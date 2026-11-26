@@ -28,7 +28,7 @@ describe('AuthController.kakaoCallback', () => {
     expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('ACC'));
   });
 
-  it('new user → redirects to FE consent page with pending token, no cookie', async () => {
+  it('new user → sets pending token as httpOnly cookie and redirects to consent (token NOT in URL)', async () => {
     const auth = {
       handleKakaoProfile: vi
         .fn()
@@ -36,27 +36,51 @@ describe('AuthController.kakaoCallback', () => {
     } as any;
     const res = makeRes();
     await new AuthController(auth, config).kakaoCallback({ user: {} } as any, res);
-    expect(res.cookie).not.toHaveBeenCalled();
-    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('consent'));
-    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('PEND'));
+    expect(res.cookie).toHaveBeenCalledWith(
+      'pending_token',
+      'PEND',
+      expect.objectContaining({ httpOnly: true }),
+    );
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringContaining('/consent'));
+    // 토큰이 URL로 새면 안 됨
+    expect(res.redirect).not.toHaveBeenCalledWith(expect.stringContaining('PEND'));
   });
 });
 
 describe('AuthController.consent', () => {
-  it('sets refresh cookie and returns the access token', async () => {
+  it('reads pending token from cookie, sets refresh cookie, returns access token', async () => {
     const auth = {
       consume: vi.fn().mockResolvedValue({ accessToken: 'ACC', refreshToken: 'REF' }),
     } as any;
     const res = makeRes();
+    const req = { cookies: { pending_token: 'PEND' } } as any;
     await new AuthController(auth, config).consent(
-      { pendingToken: 'P', agreeTerms: true, agreePrivacy: true },
+      req,
+      { agreeTerms: true, agreePrivacy: true },
       res,
     );
+    expect(auth.consume).toHaveBeenCalledWith('PEND', {
+      agreeTerms: true,
+      agreePrivacy: true,
+    });
     expect(res.cookie).toHaveBeenCalledWith(
       'refresh_token',
       'REF',
       expect.objectContaining({ httpOnly: true }),
     );
     expect(res.json).toHaveBeenCalledWith({ accessToken: 'ACC' });
+  });
+
+  it('rejects when there is no pending cookie', async () => {
+    const auth = { consume: vi.fn() } as any;
+    const res = makeRes();
+    await expect(
+      new AuthController(auth, config).consent(
+        { cookies: {} } as any,
+        { agreeTerms: true, agreePrivacy: true },
+        res,
+      ),
+    ).rejects.toThrow();
+    expect(auth.consume).not.toHaveBeenCalled();
   });
 });

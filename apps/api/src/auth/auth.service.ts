@@ -30,14 +30,15 @@ export class AuthService {
     };
   }
 
-  // pending 토큰 + 필수 약관동의 → 계정 생성 → access/refresh 발급
+  // pending 토큰(쿠키) + 필수 약관동의 → 계정 생성 → access/refresh 발급
   async consume(
-    input: ConsentRequest,
+    pendingToken: string,
+    consent: ConsentRequest,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    if (!input.agreeTerms || !input.agreePrivacy) {
+    if (!consent.agreeTerms || !consent.agreePrivacy) {
       throw new BadRequestException('이용약관·개인정보 수집에 동의해야 합니다');
     }
-    const profile = this.tokens.verifyPending(input.pendingToken);
+    const profile = this.tokens.verifyPending(pendingToken);
     const user = await this.users.create({
       provider: profile.provider,
       providerUserId: profile.providerUserId,

@@ -1,9 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(cookieParser()); // req.cookies (refresh/pending 토큰 읽기)
   // 인그레스가 /api 를 api 백엔드로 보냄 (#7 배포 인프라)
   app.setGlobalPrefix('api');
 

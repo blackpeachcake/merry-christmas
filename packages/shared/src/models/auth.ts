@@ -5,8 +5,8 @@ export interface AuthTokens {
 }
 
 // POST /api/auth/consent — 신규 유저 약관동의
+// pendingToken은 httpOnly 쿠키로 전달됨(URL/바디 노출 방지) → FE는 동의 여부만 전송
 export interface ConsentRequest {
-  pendingToken: string;
   agreeTerms: boolean;
   agreePrivacy: boolean;
 }

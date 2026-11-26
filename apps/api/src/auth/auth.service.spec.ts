@@ -64,11 +64,7 @@ describe('AuthService.handleKakaoProfile (real DB)', () => {
 describe('AuthService.consume (약관동의 → 계정 생성)', () => {
   it('creates a user and returns tokens when both required consents are agreed', async () => {
     const pending = tokens.issuePending(profile);
-    const res = await auth.consume({
-      pendingToken: pending,
-      agreeTerms: true,
-      agreePrivacy: true,
-    });
+    const res = await auth.consume(pending, { agreeTerms: true, agreePrivacy: true });
     expect(tokens.verifyAccess(res.accessToken).sub).toBeTruthy();
     const created = await users.findByProvider('kakao', 'k1');
     expect(created).not.toBeNull();
@@ -78,7 +74,7 @@ describe('AuthService.consume (약관동의 → 계정 생성)', () => {
   it('rejects and creates no user when a required consent is missing', async () => {
     const pending = tokens.issuePending(profile);
     await expect(
-      auth.consume({ pendingToken: pending, agreeTerms: true, agreePrivacy: false }),
+      auth.consume(pending, { agreeTerms: true, agreePrivacy: false }),
     ).rejects.toThrow();
     expect(await users.findByProvider('kakao', 'k1')).toBeNull();
   });
