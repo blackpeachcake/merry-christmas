@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { TokenService } from './token.service';
-import { AuthResult, ConsentInput, KakaoProfile } from '../models/auth.model';
+import type { ConsentRequest } from '@nacho/shared';
+import { AuthResult, KakaoProfile } from '../models/auth.model';
 
 @Injectable()
 export class AuthService {
@@ -31,7 +32,7 @@ export class AuthService {
 
   // pending 토큰 + 필수 약관동의 → 계정 생성 → access/refresh 발급
   async consume(
-    input: ConsentInput,
+    input: ConsentRequest,
   ): Promise<{ accessToken: string; refreshToken: string }> {
     if (!input.agreeTerms || !input.agreePrivacy) {
       throw new BadRequestException('이용약관·개인정보 수집에 동의해야 합니다');

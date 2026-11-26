@@ -2,7 +2,8 @@ import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { KakaoAuthGuard } from './kakao-auth.guard';
-import { ConsentInput, KakaoProfile } from '../models/auth.model';
+import type { ConsentRequest } from '@nacho/shared';
+import { KakaoProfile } from '../models/auth.model';
 
 const REFRESH_COOKIE = 'refresh_token';
 const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 * 1000; // 14일
@@ -46,7 +47,7 @@ export class AuthController {
   }
 
   @Post('consent')
-  async consent(@Body() dto: ConsentInput, @Res() res: ResLike): Promise<void> {
+  async consent(@Body() dto: ConsentRequest, @Res() res: ResLike): Promise<void> {
     const tokens = await this.auth.consume(dto);
     this.setRefreshCookie(res, tokens.refreshToken);
     res.json({ accessToken: tokens.accessToken });
