@@ -5,6 +5,7 @@ import { DbHealthController } from './health/db-health.controller';
 import { PrismaService } from './prisma/prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { RoomsModule } from './rooms/rooms.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { RoomsModule } from './rooms/rooms.module';
     ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
     RoomsModule,
+    NotificationsModule,
   ],
   controllers: [HealthController, DbHealthController],
   providers: [PrismaService],
