@@ -1,9 +1,14 @@
-import { describe, it, expect, beforeEach, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll, vi } from 'vitest';
 import { PrismaService } from '../prisma/prisma.service';
 import { RoomsService } from './rooms.service';
 
 const prisma = new PrismaService();
-const svc = new RoomsService(prisma);
+const events = { emit: vi.fn() };
+const svc = new RoomsService(prisma, events as any);
+
+beforeEach(() => {
+  events.emit.mockClear();
+});
 
 beforeEach(async () => {
   await prisma.notification.deleteMany();
@@ -45,6 +50,7 @@ describe('RoomsService.joinByCode (real DB)', () => {
 
     const notif = await prisma.notification.findFirst({ where: { userId: 'owner' } });
     expect(notif?.type).toBe('join_requested');
+    expect(events.emit).toHaveBeenCalledWith('owner', expect.objectContaining({ type: 'join_requested' }));
   });
 
   it('rejects a wrong invite code', async () => {
@@ -106,6 +112,7 @@ describe('RoomsService.approveRequest (real DB)', () => {
     expect(updated.status).toBe('approved');
     const notif = await prisma.notification.findFirst({ where: { userId: 'friend' } });
     expect(notif?.type).toBe('join_approved');
+    expect(events.emit).toHaveBeenCalledWith('friend', expect.objectContaining({ type: 'join_approved' }));
   });
 
   it('rejects when the room is already full', async () => {
@@ -141,6 +148,7 @@ describe('RoomsService.rejectRequest (real DB)', () => {
     expect(updated.rejectCount).toBe(1);
     const notif = await prisma.notification.findFirst({ where: { userId: 'friend' } });
     expect(notif?.type).toBe('join_rejected');
+    expect(events.emit).toHaveBeenCalledWith('friend', expect.objectContaining({ type: 'join_rejected' }));
   });
 
   it('rejects when the request is not pending', async () => {

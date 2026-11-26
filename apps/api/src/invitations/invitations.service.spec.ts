@@ -4,7 +4,7 @@ import { RoomsService } from '../rooms/rooms.service';
 import { InvitationsService } from './invitations.service';
 
 const prisma = new PrismaService();
-const rooms = new RoomsService(prisma);
+const rooms = new RoomsService(prisma, { emit: () => {} } as any);
 const svc = new InvitationsService(prisma);
 
 beforeEach(async () => {

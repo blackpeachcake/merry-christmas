@@ -8,12 +8,16 @@ import {
 import type { CreateRoomRequest } from '@nacho/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { generateInviteCode } from '../common/invite-code';
+import { NotificationEventsService } from '../notifications/notification-events.service';
 
 const MAX_REJECT_COUNT = 3; // @nacho/shared의 동일 상수 — BE는 런타임 값을 shared에서 import하지 않음(타입만)
 
 @Injectable()
 export class RoomsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: NotificationEventsService,
+  ) {}
 
   async create(userId: string, input: CreateRoomRequest) {
     const name = input.name?.trim();
@@ -90,13 +94,14 @@ export class RoomsService {
       create: { roomId, userId, status: 'pending' },
       update: { status: 'pending' },
     });
-    await this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         userId: room.ownerId,
         type: 'join_requested',
         payload: { roomId, roomName: room.name, requesterId: userId },
       },
     });
+    this.events.emit(notification.userId, notification as any);
   }
 
   listPendingRequests(roomId: string) {
@@ -122,13 +127,14 @@ export class RoomsService {
       }),
       this.prisma.joinRequest.update({ where: { id: reqId }, data: { status: 'approved' } }),
     ]);
-    await this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         userId: req.userId,
         type: 'join_approved',
         payload: { roomId, roomName: room.name },
       },
     });
+    this.events.emit(notification.userId, notification as any);
   }
 
   async rejectRequest(roomId: string, reqId: string): Promise<void> {
@@ -141,13 +147,14 @@ export class RoomsService {
       where: { id: reqId },
       data: { status: 'rejected', rejectCount: { increment: 1 } },
     });
-    await this.prisma.notification.create({
+    const notification = await this.prisma.notification.create({
       data: {
         userId: req.userId,
         type: 'join_rejected',
         payload: { roomId, roomName: room.name },
       },
     });
+    this.events.emit(notification.userId, notification as any);
   }
 
   async leave(userId: string, roomId: string): Promise<void> {

@@ -3,7 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RoomsService } from './rooms.service';
 
 const prisma = new PrismaService();
-const svc = new RoomsService(prisma);
+const svc = new RoomsService(prisma, { emit: () => {} } as any);
 
 beforeEach(async () => {
   await prisma.roomMember.deleteMany();
