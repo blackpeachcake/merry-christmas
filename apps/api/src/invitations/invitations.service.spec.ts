@@ -100,6 +100,24 @@ describe('InvitationsService.update (real DB)', () => {
   });
 });
 
+describe('InvitationsService.assertCanEdit (real DB)', () => {
+  it('허용: 방 멤버', async () => {
+    const room = await rooms.create('owner', { name: '방', capacity: 3 });
+    const inv = await svc.create('owner', room.id, { name: 'A', ratio: '9:16', background: { type: 'color', value: '#fff' } });
+    await expect(svc.assertCanEdit('owner', inv.id)).resolves.toBeUndefined();
+  });
+
+  it('거부: 방 멤버가 아님', async () => {
+    const room = await rooms.create('owner', { name: '방', capacity: 3 });
+    const inv = await svc.create('owner', room.id, { name: 'A', ratio: '9:16', background: { type: 'color', value: '#fff' } });
+    await expect(svc.assertCanEdit('stranger', inv.id)).rejects.toThrow();
+  });
+
+  it('존재하지 않는 초대장 404', async () => {
+    await expect(svc.assertCanEdit('owner', 'nope')).rejects.toThrow();
+  });
+});
+
 describe('InvitationsService.remove (real DB)', () => {
   it('removes the invitation when called by the room owner', async () => {
     const room = await rooms.create('owner', { name: '방', capacity: 3 });

@@ -8,5 +8,6 @@ import { AuthModule } from '../auth/auth.module';
   imports: [AuthModule], // JwtAuthGuard 사용
   controllers: [InvitationsController],
   providers: [InvitationsService, PrismaService],
+  exports: [InvitationsService], // CollabModule 등에서 멤버 체크 재사용
 })
 export class InvitationsModule {}

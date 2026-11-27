@@ -47,12 +47,16 @@ export class InvitationsService {
     });
   }
 
-  async update(userId: string, invitationId: string, patch: UpdateInvitationRequest) {
+  async assertCanEdit(userId: string, invitationId: string): Promise<void> {
     const invitation = await this.prisma.invitation.findUnique({ where: { id: invitationId } });
     if (!invitation) {
       throw new NotFoundException('초대장을 찾을 수 없습니다');
     }
     await this.assertMember(userId, invitation.roomId);
+  }
+
+  async update(userId: string, invitationId: string, patch: UpdateInvitationRequest) {
+    await this.assertCanEdit(userId, invitationId);
     return this.prisma.invitation.update({
       where: { id: invitationId },
       data: {

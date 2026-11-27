@@ -71,4 +71,5 @@ jobs:
             --image ${{ env.IMAGE }}:${{ github.sha }} \
             --region ${{ env.REGION }} \
             --allow-unauthenticated \
+            --timeout=3600 \
             --quiet

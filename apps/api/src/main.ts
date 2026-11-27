@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { CollabGateway } from './collab/collab.gateway';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,5 +23,17 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port, '0.0.0.0');
+
+  // WS /api/collab — 실시간 공동편집(013). Express가 처리 안 하는 'upgrade' 이벤트를 직접 받아 연결.
+  const collab = app.get(CollabGateway);
+  type Upgrade = (req: import('http').IncomingMessage, socket: import('stream').Duplex, head: Buffer) => void;
+  const onUpgrade: Upgrade = (req, socket, head) => {
+    if (req.url?.startsWith('/api/collab')) {
+      collab.handleUpgrade(req, socket, head);
+    } else {
+      socket.destroy();
+    }
+  };
+  app.getHttpServer().on('upgrade', onUpgrade);
 }
 bootstrap();

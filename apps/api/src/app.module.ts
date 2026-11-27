@@ -9,6 +9,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { InvitationsModule } from './invitations/invitations.module';
 import { MeModule } from './me/me.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { CollabModule } from './collab/collab.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UploadsModule } from './uploads/uploads.module';
     InvitationsModule,
     MeModule,
     UploadsModule,
+    CollabModule,
   ],
   controllers: [HealthController, DbHealthController],
   providers: [PrismaService],
