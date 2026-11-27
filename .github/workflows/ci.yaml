@@ -13,6 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # FE 영역(apps/web, packages/shared)만 검사한다. BE(apps/api) CI는 BE 쪽에서 따로 정한다.
   check:
     runs-on: ubuntu-latest
     steps:
@@ -29,16 +30,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Format
-        run: pnpm format:check
+        run: pnpm format:check:fe
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm lint:fe
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm typecheck:fe
 
       - name: Unit test
-        run: pnpm test
+        run: pnpm test:fe
 
       - name: Build (web)
         run: pnpm build:web

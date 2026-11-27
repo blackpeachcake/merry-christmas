@@ -5,7 +5,11 @@ pre-commit:
   parallel: true
   jobs:
     - name: prettier
-      glob: "*.{js,mjs,cjs,ts,mts,tsx,json,css,md,yml,yaml}"
+      # FE 영역만 포맷한다. apps/api·specs·packages/shared(BE 계약 타입)는 BE 담당이라 건드리지 않는다.
+      glob:
+        - "apps/web/**/*.{js,mjs,cjs,ts,mts,tsx,json,css,md,yml,yaml}"
+        - ".github/**/*.{yml,yaml}"
+        - "*.{json,md,yml,yaml}"
       run: pnpm exec prettier --write --ignore-unknown {staged_files}
       stage_fixed: true
 
@@ -20,10 +24,11 @@ commit-msg:
     - name: commitlint
       run: pnpm exec commitlint --edit {1}
 
+# FE 영역(apps/web, packages/shared)만 검사한다. API 테스트는 DB가 필요해 BE 쪽에서 따로 돌린다.
 pre-push:
   parallel: true
   jobs:
     - name: typecheck
-      run: pnpm typecheck
+      run: pnpm typecheck:fe
     - name: unit test
-      run: pnpm test
+      run: pnpm test:fe

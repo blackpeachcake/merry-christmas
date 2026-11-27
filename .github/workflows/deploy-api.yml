@@ -1,0 +1,74 @@
+name: deploy-api
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "packages/shared/**"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: project-bc870ead-4152-48ad-9bf
+  REGION: asia-northeast3
+  SERVICE: nacho-api
+  IMAGE: asia-northeast3-docker.pkg.dev/project-bc870ead-4152-48ad-9bf/nacho/api
+
+permissions:
+  contents: read
+  id-token: write # Workload Identity Federation
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/846268423205/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: nacho-ci@project-bc870ead-4152-48ad-9bf.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build & push image
+        run: |
+          docker build -f apps/api/Dockerfile \
+            -t ${{ env.IMAGE }}:${{ github.sha }} \
+            -t ${{ env.IMAGE }}:latest .
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ env.IMAGE }}:latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Migrate prod DB (prisma db push via Cloud SQL Auth Proxy)
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+          curl -sSL -o cloud-sql-proxy \
+            https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.1/cloud-sql-proxy.linux.amd64
+          chmod +x cloud-sql-proxy
+          ./cloud-sql-proxy --port 5432 ${{ env.PROJECT_ID }}:${{ env.REGION }}:nacho-pg &
+          sleep 5
+
+          RAW_URL=$(gcloud secrets versions access latest --secret=nacho-database-url)
+          PASS=$(echo "$RAW_URL" | sed -n 's#.*://nacho:\([^@]*\)@.*#\1#p')
+          echo "::add-mask::$PASS"
+          DATABASE_URL="postgresql://nacho:${PASS}@127.0.0.1:5432/nacho_prod?schema=public" \
+            pnpm --filter api exec prisma db push --skip-generate
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image ${{ env.IMAGE }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --allow-unauthenticated \
+            --quiet
