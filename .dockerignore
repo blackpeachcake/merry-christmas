@@ -1,6 +1,8 @@
 **/node_modules
 **/.next
 **/out
+**/dist
+**/build
 **/coverage
 **/test-results
 **/playwright-report
@@ -8,4 +10,5 @@
 !**/.env.example
 .git
 .github
+infra
 **/*.md

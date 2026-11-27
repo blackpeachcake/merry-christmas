@@ -1,0 +1,89 @@
+// 로컬=dev DB / 리얼=prod DB 는 DATABASE_URL 환경변수로 분기 (코드 변경 없음)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 기초 엔티티. 나머지 모델(room/room_member/join_request/notification/invitation)은
+// 기능 단계에서 추가 — 설계: 디스커션 #6
+model User {
+  id             String    @id @default(uuid())
+  provider       String // 'google' | 'kakao'
+  providerUserId String    @map("provider_user_id")
+  nickname       String
+  imageUrl       String?   @map("image_url")
+  termsAgreedAt  DateTime? @map("terms_agreed_at") // null 아니면 약관 동의함(여부+시점)
+  tokenVersion   Int       @default(0) @map("token_version") // 증가시키면 기존 refresh 전부 무효화(로그아웃)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  @@unique([provider, providerUserId])
+  @@map("users")
+}
+
+model Room {
+  id           String       @id @default(uuid())
+  name         String
+  thumbnailUrl String?      @map("thumbnail_url")
+  ownerId      String       @map("owner_id")
+  inviteCode   String       @unique @map("invite_code")
+  capacity     Int // 1~8 (방장 포함 총원)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  members      RoomMember[]
+
+  @@map("rooms")
+}
+
+model RoomMember {
+  roomId   String   @map("room_id")
+  userId   String   @map("user_id")
+  role     String // owner | member
+  joinedAt DateTime @default(now()) @map("joined_at")
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@map("room_members")
+}
+
+model JoinRequest {
+  id          String   @id @default(uuid())
+  roomId      String   @map("room_id")
+  userId      String   @map("user_id")
+  status      String // pending | approved | rejected
+  rejectCount Int      @default(0) @map("reject_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([roomId, userId])
+  @@map("join_requests")
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  type      String // join_requested | join_approved | join_rejected
+  payload   Json
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
+
+model Invitation {
+  id           String   @id @default(uuid())
+  roomId       String   @map("room_id")
+  name         String
+  ratio        String // '9:16' | '4:5' | '1:1' | '16:9' (생성 후 불변)
+  background   Json
+  thumbnailUrl String?  @map("thumbnail_url")
+  yjsState     Bytes?   @map("yjs_state") // 007(실시간 공동편집)에서 사용 — 이번 스펙은 손대지 않음
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("invitations")
+}
