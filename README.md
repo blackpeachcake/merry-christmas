@@ -52,13 +52,9 @@ flowchart TD
     LB -- "/api/* (HTTP)\n/api/notifications/stream (SSE)\n/api/collab (WS)" --> CR["Cloud Run · apps/api (NestJS)"]
 
     CR --> SQL[("Cloud SQL · Postgres")]
-
-    CLD(["Cloudinary\n(외부 이미지 호스팅 서비스, 배포 대상 아님)"])
-    CR -. "presigned URL 발급" .-> CLD
-    WEB -. "그 URL로 이미지 직접 업로드/조회" .-> CLD
 ```
 
-같은 도메인 경로(`/api/*`)로 묶여 있어 **same-origin**이라 CORS가 필요 없고, 인증 쿠키도 호스트 하나만 바라보면 된다. Cloudinary는 인프라에 배포하는 게 아니라, 초대장 이미지를 저장·제공하는 외부 SaaS를 BE가 presigned URL로 중개하는 것([010](specs/010-upload-signature)).
+같은 도메인 경로(`/api/*`)로 묶여 있어 **same-origin**이라 CORS가 필요 없고, 인증 쿠키도 호스트 하나만 바라보면 된다.
 
 ### 실시간 통신 (SSE / WebSocket)
 
