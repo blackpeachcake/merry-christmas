@@ -1,9 +1,11 @@
 # 004 — plan (기술·구조)
 
 ## 가드 (신규)
+
 - `RoomOwnerGuard` — `req.params.id`(roomId)의 `room.ownerId === req.userId` 확인. `JwtAuthGuard` 뒤에 체이닝. 아니면 403.
 
 ## 모듈/파일
+
 ```
 apps/api/src/
 ├─ rooms/
@@ -16,6 +18,7 @@ apps/api/src/
 ```
 
 ## 로직 (RoomsService 추가 메서드)
+
 - `preview(roomId)`: room 조회 → `{ name }`, 없으면 `NotFoundException`.
 - `joinByCode(userId, roomId, code)`:
   1. room 조회(없으면 404), `code !== room.inviteCode` → 400
@@ -34,6 +37,7 @@ apps/api/src/
   3. `notification`(신청자, `join_rejected`, `{roomId, roomName}`)
 
 ## DB (Prisma 추가)
+
 ```prisma
 model JoinRequest {
   id          String   @id @default(uuid())
@@ -61,9 +65,11 @@ model Notification {
 ```
 
 ## 공유 타입 (@nacho/shared)
+
 이미 존재(`room.ts`의 `JoinRequest`, `notification.ts`의 `Notification`) — 변경 불필요. 응답 DTO는 이 타입 그대로 매핑.
 
 ## 테스트 전략 (TDD)
+
 - 단위: `RoomOwnerGuard`(mock req/prisma) — owner면 true, 아니면 403, 방 없으면 404.
 - 통합(real DB): `RoomsService.preview`·`joinByCode`(최초 신청/중복 pending/이미 멤버 409/거절 3회 초과 403)·`listPendingRequests`·`approveRequest`(정원 초과 400/정상 승인+member insert+알림)·`rejectRequest`(reject_count 증가+알림).
 - 컨트롤러(mock service): 라우팅 위임, roomId/reqId 전달, 가드 통과 확인.

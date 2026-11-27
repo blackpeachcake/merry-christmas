@@ -1,0 +1,3 @@
+# public 레포라 GitHub이 PR 생성 시 아래 팀에 리뷰를 자동 요청한다.
+# 팀 멤버 관리는 org 설정(blackpeachcake/fe)에서 한다.
+* @blackpeachcake/fe

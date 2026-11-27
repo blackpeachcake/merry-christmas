@@ -1,10 +1,14 @@
 **/node_modules
-**/dist
 **/.next
+**/out
+**/dist
 **/build
 **/coverage
+**/test-results
+**/playwright-report
+**/.env*
+!**/.env.example
 .git
 .github
 infra
-*.md
-**/.env*
+**/*.md

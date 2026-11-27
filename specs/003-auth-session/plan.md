@@ -1,9 +1,11 @@
 # 003 — plan
 
 ## 쿠키 헬퍼 (auth/cookies.ts)
+
 `setAccessCookie(res, token)`·`setRefreshCookie(res, token)`·`clearAuthCookies(res)` — httpOnly·Secure·SameSite=Lax. access path=/api, refresh path=/api/auth.
 
 ## 변경
+
 - **User**: `tokenVersion Int @default(0)`.
 - **TokenService**: `issueRefresh(userId, version)` → payload `{ sub, v }`. `verifyRefresh → { sub, v }`. (access/pending 그대로)
 - **UsersService**: `findById(id)` → User | null. `bumpTokenVersion(id)`.
@@ -21,9 +23,11 @@
   - `POST /logout`(JwtAuthGuard): authService.logout + clearAuthCookies.
 
 ## 공유(@nacho/shared)
+
 - `AuthTokens` 제거(쿠키라 바디에 토큰 없음). `/me` 응답 = `User`.
 
 ## 테스트(TDD)
+
 - 단위: TokenService(refresh version 왕복), JwtAuthGuard(쿠키/헤더).
 - real DB: UsersService(findById·bumpTokenVersion), AuthService(refresh 성공/version불일치/logout후 무효).
 - 컨트롤러(mock): /me·/refresh·/logout·terms 쿠키 설정.
