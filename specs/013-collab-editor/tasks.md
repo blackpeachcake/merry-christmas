@@ -8,5 +8,7 @@
 - [x] T6. `deploy-api.yml`에 `--timeout=3600` 추가
 - [x] T7. tsc/vitest/빌드/로컬 부팅 + 수동 WS 스크립트로 인증·거부·동기화 확인
   - 중간에 발견한 버그: `Hocuspocus.handleConnection()`은 `ClientConnection`만 만들고 raw ws의 message/close 이벤트를 자동 연결해주지 않음(라이브러리 내부 `Server` 클래스가 직접 이 둘을 연결해주는 걸 소스에서 확인). `CollabGateway.handleUpgrade`에서 반환값을 버리고 있던 게 원인 — `ws.on('message'/'close', ...)` → `connection.handleMessage/handleClose`로 직접 연결해 해결.
-- [ ] T8. 커밋·푸시 + prod 배포 확인(timeoutSeconds 3600 확인 포함)
-- [ ] T9. 디스커션 #6에 요약 코멘트(FE 연동 방법 포함: url/`name`/쿠키 기반 인증)
+- [x] T8. 커밋·푸시 + prod 배포 확인(timeoutSeconds 3600 확인 포함)
+  - `gcloud run services describe` → `timeoutSeconds: 3600` 확인
+  - `curl --http1.1`로 `/api/collab`에 WS 업그레이드 요청 → `101 Switching Protocols` 확인(쿠키 없이 보냈으니 Hocuspocus 프로토콜상 인증 메시지는 안 보내 연결은 열린 채로 유지됨 — 로컬에서도 같은 동작 확인됨, 엔드포인트 자체가 살아있다는 것만 확인하는 목적)
+- [x] T9. 디스커션 #6에 요약 코멘트(FE 연동 방법 포함: url/`name`/쿠키 기반 인증) — https://github.com/blackpeachcake/nacho/discussions/6#discussioncomment-19951760
