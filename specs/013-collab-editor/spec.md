@@ -16,6 +16,66 @@ FE에 캔버스 에디터(Konva + Yjs, 로컬 전용 프로토타입)가 추가�
 - 영속화: `onLoadDocument`에서 `invitation.yjs_state` 복원, `onStoreDocument`(라이브러리 기본 debounce)에서 저장.
 - Cloud Run 요청 타임아웃을 300s → 3600s로 늘림(WS 연결이 5분 만에 끊기는 것 방지). `deploy-api.yml`의 `gcloud run deploy`에 `--timeout` 추가.
 
+## 2.1 구조
+
+```mermaid
+flowchart LR
+    subgraph FE["FE (브라우저)"]
+        Editor["Konva 캔버스 에디터"]
+        Provider["HocuspocusProvider\n(Yjs client)"]
+        Editor <--> Provider
+    end
+
+    subgraph API["apps/api (Nest, 단일 인스턴스)"]
+        Upgrade["main.ts\nhttp.Server 'upgrade' 이벤트"]
+        Gateway["CollabGateway"]
+        Hocuspocus["Hocuspocus\n(서버 CRDT 엔진)"]
+        Invitations["InvitationsService\n.assertCanEdit()"]
+        Upgrade --> Gateway --> Hocuspocus
+        Hocuspocus -- onAuthenticate --> Invitations
+    end
+
+    DB[("Postgres\ninvitation.yjs_state")]
+
+    Provider -- "WS /api/collab\n(쿠키: access_token)" --> Upgrade
+    Hocuspocus -- "onLoadDocument / onStoreDocument" --> DB
+```
+
+## 2.2 연동 플로우 (연결 1번 기준)
+
+```mermaid
+sequenceDiagram
+    participant FE as FE (HocuspocusProvider)
+    participant Up as main.ts (upgrade 이벤트)
+    participant GW as CollabGateway
+    participant HP as Hocuspocus
+    participant Inv as InvitationsService
+    participant DB as Postgres
+
+    FE->>Up: WS 업그레이드 요청 (쿠키: access_token, /api/collab)
+    Up->>GW: handleUpgrade()
+    GW->>HP: handleConnection(ws, request)
+    FE->>HP: Auth 메시지 (토큰은 비워둠, 쿠키로만 인증)
+    HP->>GW: onAuthenticate({ requestHeaders, documentName })
+    GW->>Inv: assertCanEdit(userId, invitationId)
+    alt 멤버 아님 / 쿠키 없음
+        Inv-->>GW: throw
+        GW-->>HP: reject
+        HP-->>FE: PermissionDenied → onAuthenticationFailed
+    else 멤버
+        Inv-->>GW: ok
+        GW-->>HP: { userId }
+        HP->>GW: onLoadDocument({ documentName })
+        GW->>DB: SELECT yjs_state
+        DB-->>GW: yjs_state (있으면)
+        GW-->>HP: Y.applyUpdate(document, state)
+        HP-->>FE: Authenticated + 문서 동기화 → onSynced
+        Note over FE,HP: 이후 양방향 업데이트 실시간 동기화
+        HP->>GW: onStoreDocument() (변경 후 debounce)
+        GW->>DB: UPDATE yjs_state
+    end
+```
+
 ## 3. 수용 기준 (Acceptance Criteria)
 
 - [x] 쿠키 없이 WS 업그레이드 시도 → 거부(연결 안 됨)
