@@ -39,46 +39,29 @@ nacho/
 └─ tsconfig.base.json
 ```
 
-### 시스템 아키텍처
+### 배포 인프라
+
+한 도메인(`nacho.olaflab.com`)을 External HTTPS LB가 경로로 분기하는 하이브리드 구조. **BE(Cloud Run)는 배포됨**, **FE(GKE)는 예정**(FE팀 담당). 자세한 내용은 [#7 인프라 설계 디스커션](https://github.com/blackpeachcake/nacho/discussions/7) 참고.
 
 ```mermaid
-flowchart LR
-    subgraph Client["브라우저 (apps/web)"]
-        UI["Next.js UI"]
-        Editor["Konva 캔버스 에디터"]
-        SSEClient["EventSource (알림)"]
-        WSClient["HocuspocusProvider (Yjs)"]
-        Editor <--> WSClient
-    end
+flowchart TD
+    U["사용자"] --> DNS["Cloud DNS · nacho.olaflab.com"]
+    DNS --> LB["External HTTPS LB + URL map"]
 
-    Kakao["카카오 OAuth"]
+    LB -- "/*" --> WEB["GKE · apps/web (Next.js, 예정)"]
+    LB -- "/api/* (HTTP)\n/api/notifications/stream (SSE)\n/api/collab (WS)" --> CR["Cloud Run · apps/api (NestJS)"]
 
-    subgraph Server["apps/api (NestJS, Cloud Run)"]
-        Auth["AuthModule (JWT 쿠키 세션)"]
-        Rooms["RoomsModule (방 생성/가입승인)"]
-        Invitations["InvitationsModule (초대장 CRUD)"]
-        Notifications["NotificationsModule (SSE)"]
-        Collab["CollabModule (Hocuspocus WS)"]
-        Uploads["UploadsModule (Cloudinary presign)"]
-    end
-
-    DB[("Postgres")]
-    Cloudinary["Cloudinary"]
-
-    UI -- "HTTP /api/*" --> Auth & Rooms & Invitations & Uploads
-    SSEClient -- "GET /api/notifications/stream" --> Notifications
-    WSClient -- "WS /api/collab\n(쿠키: access_token)" --> Collab
-
-    Auth -- OAuth --> Kakao
-    Auth --> DB
-    Rooms --> DB
-    Invitations --> DB
-    Notifications --> DB
-    Collab --> DB
-    Uploads -- "presigned URL 발급" --> Cloudinary
+    CR --> SQL[("Cloud SQL · Postgres")]
+    CR --> CLD["Cloudinary"]
+    WEB --> CLD
 ```
 
-실시간 공동편집(WS)의 인증·동기화 세부 플로우는 [`specs/013-collab-editor/spec.md`](specs/013-collab-editor/spec.md#22-연동-플로우-연결-1번-기준)에 시퀀스 다이어그램으로 정리돼 있다.
+같은 도메인 경로(`/api/*`)로 묶여 있어 **same-origin**이라 CORS가 필요 없고, 인증 쿠키도 호스트 하나만 바라보면 된다.
+
+### 실시간 통신 (SSE / WebSocket)
+
+- **SSE** `GET /api/notifications/stream` — 알림을 서버 → 클라이언트 단방향으로 실시간 전달 ([012](specs/012-notifications-sse)).
+- **WebSocket** `WS /api/collab` — Yjs(CRDT) + Hocuspocus로 초대장 여러 명이 동시 편집 ([013](specs/013-collab-editor)). 인증은 커스텀 헤더를 못 보내는 SSE/WS 특성상 **쿠키 기반**으로 처리. 연결·인증·동기화 세부 플로우는 [`specs/013-collab-editor/spec.md`](specs/013-collab-editor/spec.md#22-연동-플로우-연결-1번-기준)의 시퀀스 다이어그램 참고.
 
 ## 시작하기
 
